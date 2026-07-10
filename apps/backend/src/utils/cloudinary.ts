@@ -40,19 +40,22 @@ const hasParts = Boolean(
     apiKey &&
     process.env.CLOUDINARY_API_SECRET?.trim()
 );
-const hasUnsignedPreset = Boolean(cloudName && apiKey && uploadPreset);
+const hasUnsignedPreset = Boolean(cloudName && uploadPreset);
 const isConfigured = hasUnsignedPreset || Boolean(cloudName && (hasUrl || hasParts));
 
 if (isConfigured) {
   if (hasUrl) {
     cloudinary.config({ secure: true });
-  } else if (hasUnsignedPreset || hasParts) {
+  } else if (hasUnsignedPreset) {
+    cloudinary.config({
+      cloud_name: cloudName,
+      secure: true,
+    });
+  } else if (hasParts) {
     cloudinary.config({
       cloud_name: cloudName,
       api_key: apiKey,
-      ...(hasParts
-        ? { api_secret: process.env.CLOUDINARY_API_SECRET!.trim() }
-        : {}),
+      api_secret: process.env.CLOUDINARY_API_SECRET!.trim(),
       secure: true,
     });
   }
@@ -68,7 +71,6 @@ export function getCloudinaryStatus() {
   return {
     configured: isConfigured,
     cloudName: cloudName || null,
-    hasApiKey: Boolean(apiKey),
     mode: hasUnsignedPreset
       ? 'unsigned_preset'
       : hasUrl
@@ -88,7 +90,7 @@ export async function verifyCloudinaryCredentials(): Promise<boolean> {
   }
 
   if (hasUnsignedPreset) {
-    credentialsVerified = Boolean(cloudName && apiKey && uploadPreset);
+    credentialsVerified = Boolean(cloudName && uploadPreset);
     return credentialsVerified;
   }
 
@@ -108,27 +110,29 @@ async function uploadBuffer(
   folder: string,
   resourceType: 'image' | 'video'
 ): Promise<UploadApiResponse> {
-  const options: Record<string, unknown> = {
+  const streamOptions = {
     folder,
     resource_type: resourceType,
   };
 
-  if (hasUnsignedPreset) {
-    options.upload_preset = uploadPreset;
-  } else {
-    options.use_filename = true;
-    options.unique_filename = true;
-  }
-
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      options,
-      (error, result) => {
-        if (error) reject(error);
-        else if (result) resolve(result);
-        else reject(new Error('Cloudinary upload returned no result'));
-      }
-    );
+    const callback = (error: unknown, result?: UploadApiResponse) => {
+      if (error) reject(error);
+      else if (result) resolve(result);
+      else reject(new Error('Cloudinary upload returned no result'));
+    };
+
+    const stream = hasUnsignedPreset
+      ? cloudinary.uploader.unsigned_upload_stream(uploadPreset, streamOptions, callback)
+      : cloudinary.uploader.upload_stream(
+          {
+            ...streamOptions,
+            use_filename: true,
+            unique_filename: true,
+          },
+          callback
+        );
+
     stream.end(buffer);
   });
 }
@@ -154,11 +158,6 @@ export async function uploadMediaFile(
     if (message.includes('Invalid Signature')) {
       throw new Error(
         'Cloudinary credentials are invalid on the server. Set CLOUDINARY_URL or use CLOUDINARY_UPLOAD_PRESET with an unsigned preset.'
-      );
-    }
-    if (message.includes('Must supply api_key')) {
-      throw new Error(
-        'Cloudinary API key is missing on the server. Add CLOUDINARY_API_KEY on Render.'
       );
     }
     throw error;
