@@ -68,6 +68,9 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
     queueVerificationEmail(normalizedEmail, verificationUrl);
 
+    const exposeVerifyLink =
+      process.env.EXPOSE_VERIFY_LINK === 'true' || process.env.NODE_ENV !== 'production';
+
     res.status(201).json({
       status: 'success',
       message: 'Đăng ký thành công. Vui lòng kiểm tra email để xác minh tài khoản (có thể mất vài phút).',
@@ -75,6 +78,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
         id: newUser.id,
         email: newUser.email,
         displayName: newUser.profile?.displayName,
+        ...(exposeVerifyLink ? { verificationUrl } : {}),
       },
     });
   } catch (error) {

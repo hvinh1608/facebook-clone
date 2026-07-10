@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [verificationUrl, setVerificationUrl] = useState('');
 
   const [birthDay, setBirthDay] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
@@ -42,6 +43,7 @@ export default function SignupPage() {
     try {
       const res = await api.post('/auth/signup', { email, password, displayName }, { timeout: 45000 });
       if (res.data?.status === 'success') {
+        setVerificationUrl(res.data.data?.verificationUrl || '');
         setIsSuccess(true);
       }
     } catch (err: any) {
@@ -66,9 +68,20 @@ export default function SignupPage() {
           </p>
 
           <div className="p-4 bg-[#f0f2f5] border border-[#dddfe2] rounded-md text-[12px] text-left flex flex-col gap-2 w-full text-[#65676b]">
-            <span className="font-bold text-[#1c1e21] uppercase tracking-wide block">Hướng dẫn thử nghiệm:</span>
-            <span>Mã xác thực được in trong logs terminal backend.</span>
-            <span>Mở liên kết kích hoạt từ <span className="font-semibold text-[#1877f2]">nexus-backend</span> để kích hoạt tài khoản.</span>
+            <span className="font-bold text-[#1c1e21] uppercase tracking-wide block">Xác minh tài khoản:</span>
+            {verificationUrl ? (
+              <>
+                <span>Email có thể không gửi được từ server. Dùng link sau để kích hoạt:</span>
+                <a href={verificationUrl} className="font-semibold text-[#1877f2] break-all hover:underline">
+                  {verificationUrl}
+                </a>
+              </>
+            ) : (
+              <>
+                <span>Kiểm tra hộp thư (cả mục Spam).</span>
+                <span>Nếu không nhận được email, vào Render → Logs để lấy link xác minh.</span>
+              </>
+            )}
           </div>
 
           <Link href="/login" className="fb-auth-btn-primary flex items-center justify-center text-base">
