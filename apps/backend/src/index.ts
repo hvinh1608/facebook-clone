@@ -17,6 +17,7 @@ import { initSocket } from './socket';
 import { NotFoundError } from './utils/errors';
 import { startScheduledPostPublisher } from './jobs/scheduledPosts';
 import { startCleanupJobs } from './jobs/cleanup';
+import { verifyCloudinaryCredentials } from './utils/cloudinary';
 
 const app = express();
 const server = http.createServer(app);
@@ -77,6 +78,9 @@ initSocket(server);
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Nexus Backend Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  void verifyCloudinaryCredentials().then((ok) => {
+    console.log(ok ? '☁️ Cloudinary ready' : '⚠️ Cloudinary not verified');
+  });
   startScheduledPostPublisher();
   startCleanupJobs();
 });

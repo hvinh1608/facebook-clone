@@ -104,19 +104,24 @@ export const createPost = async (req: AuthRequest, res: Response, next: NextFunc
 
     // Handle Uploaded Media
     if (req.files && Array.isArray(req.files)) {
-      const mediaData = await Promise.all(req.files.map(async (file: any) => {
-        const type = file.mimetype.startsWith('video/') ? MediaType.VIDEO : MediaType.IMAGE;
-        return {
-          postId: post.id,
-          type,
-          url: await uploadMediaFile(file, 'facebook/posts'),
-        };
-      }));
+      try {
+        const mediaData = await Promise.all(req.files.map(async (file: Express.Multer.File) => {
+          const type = file.mimetype.startsWith('video/') ? MediaType.VIDEO : MediaType.IMAGE;
+          return {
+            postId: post.id,
+            type,
+            url: await uploadMediaFile(file, 'facebook/posts'),
+          };
+        }));
 
-      if (mediaData.length > 0) {
-        await prisma.postMedia.createMany({
-          data: mediaData,
-        });
+        if (mediaData.length > 0) {
+          await prisma.postMedia.createMany({
+            data: mediaData,
+          });
+        }
+      } catch (uploadError: any) {
+        await prisma.post.delete({ where: { id: post.id } }).catch(() => {});
+        return next(new BadRequestError(uploadError?.message || 'Failed to upload media'));
       }
     }
 

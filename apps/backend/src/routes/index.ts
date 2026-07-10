@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getCloudinaryStatus } from '../utils/cloudinary';
+import { getCloudinaryStatus, verifyCloudinaryCredentials } from '../utils/cloudinary';
 import authRouter from './auth';
 import userRouter from './user';
 import postRouter from './post';
@@ -15,7 +15,8 @@ import liveRouter from './live';
 
 const router = Router();
 
-router.get('/health', (_req: Request, res: Response) => {
+router.get('/health', async (_req: Request, res: Response) => {
+  await verifyCloudinaryCredentials();
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
