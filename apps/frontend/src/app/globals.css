@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background-rgb: 240, 242, 245; /* #f0f2f5 */
+  --foreground-rgb: 5, 5, 5;
+  --card-bg: #ffffff;
+  --border-color: #dddfe2;
+  --border-soft: #e4e6eb;
+  --text-primary: #050505;
+  --text-secondary: #65676b;
+  --text-muted: #8a8d91;
+  --input-bg: #f0f2f5;
+  --hover-bg: #e4e6eb;
+  --brand-color: #1877f2;
+  --panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --panel-shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --header-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --surface-muted: #f7f8fa;
+}
+
+.dark {
+  --background-rgb: 24, 25, 26; /* #18191a */
+  --foreground-rgb: 228, 230, 235;
+  --card-bg: #242526;
+  --border-color: #3e4042;
+  --border-soft: #3a3b3c;
+  --text-primary: #e4e6eb;
+  --text-secondary: #b0b3b8;
+  --text-muted: #8d949e;
+  --input-bg: #3a3b3c;
+  --hover-bg: #3e4042;
+  --brand-color: #1877f2;
+  --panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --panel-shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.24);
+  --header-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --surface-muted: #18191a;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  color: var(--text-primary);
+  background-color: rgb(var(--background-rgb));
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+/* Scrollbars - Simple gray Facebook style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Facebook-style Card Panels mapping */
+.glass-panel {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--panel-shadow);
+  border-radius: 12px;
+}
+
+.glass-panel-light {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--panel-shadow);
+  border-radius: 12px;
+}
+
+.glass-input {
+  background-color: var(--input-bg);
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.glass-input:focus {
+  border-color: var(--brand-color);
+  outline: none;
+  background-color: var(--card-bg);
+  box-shadow: 0 0 0 1px var(--brand-color);
+}
+
+.fb-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--panel-shadow);
+}
+
+.fb-card-soft {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  box-shadow: var(--panel-shadow);
+}
+
+.fb-section-title {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.fb-icon-button {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.fb-icon-button:hover {
+  background: var(--hover-bg);
+}
+
+.fb-nav-tab {
+  border-radius: 10px;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.fb-nav-tab:hover {
+  background: var(--hover-bg);
+}
+
+.fb-divider {
+  border-color: var(--border-soft);
+}
+
+/* Pulsing Online Badge */
+.online-pulse {
+  position: relative;
+}
+
+.online-pulse::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: #31a24c; /* Facebook Online Green */
+  border-radius: 50%;
+  animation: pulse-ring 1.25s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Chat box slide-up animation */
+@keyframes chatbox-open {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-chatbox-open {
+  animation: chatbox-open 0.2s ease-out;
+}
+
+/* Facebook auth pages */
+.fb-auth-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.fb-auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 17px;
+  line-height: 1.2;
+  color: #1c1e21;
+  background: #ffffff;
+  border: 1px solid #dddfe2;
+  border-radius: 6px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fb-auth-input:focus {
+  outline: none;
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px #e7f3ff;
+}
+
+.fb-auth-input::placeholder {
+  color: #90949c;
+}
+
+.fb-auth-btn-primary {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: #1877f2;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  transition: background-color 0.18s ease;
+}
+
+.fb-auth-btn-primary:hover:not(:disabled) {
+  background: #166fe5;
+}
+
+.fb-auth-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.fb-auth-btn-secondary {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: #42b72a;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  transition: background-color 0.18s ease;
+}
+
+.fb-auth-btn-secondary:hover {
+  background: #36a420;
+}
+
+.fb-auth-btn-outline {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1877f2;
+  border: 1px solid #1877f2;
+  font-size: 17px;
+  font-weight: 600;
+  transition: background-color 0.18s ease;
+}
+
+.fb-auth-btn-outline:hover {
+  background: #f5f6f7;
+}
+
