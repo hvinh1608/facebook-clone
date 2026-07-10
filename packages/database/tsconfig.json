@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["index.ts", "prisma/seed.ts"]
+  "include": ["index.ts"]
 }

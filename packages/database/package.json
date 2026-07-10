@@ -8,13 +8,14 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "ts-node prisma/seed.ts",
-    "build": "tsc"
+    "build": "prisma generate && tsc",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.2"
+    "@prisma/client": "^5.10.2",
+    "prisma": "^5.10.2"
   },
   "devDependencies": {
-    "prisma": "^5.10.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "@types/node": "^20.11.20"

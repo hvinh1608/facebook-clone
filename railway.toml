@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm install && npm run build --workspace=packages/database && npm run build --workspace=apps/backend"
+buildCommand = "npm install && npm run db:generate --workspace=packages/database && npm run build --workspace=packages/database && npm run build --workspace=apps/backend"
 
 [deploy]
 startCommand = "npm run start --workspace=apps/backend"
