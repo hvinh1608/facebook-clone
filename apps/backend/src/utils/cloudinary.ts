@@ -14,30 +14,45 @@ function getCloudinaryCloudName(): string | undefined {
   return process.env.CLOUDINARY_CLOUD_NAME?.trim() || undefined;
 }
 
+function getApiKey(): string | undefined {
+  if (process.env.CLOUDINARY_API_KEY?.trim()) {
+    return process.env.CLOUDINARY_API_KEY.trim();
+  }
+
+  if (process.env.CLOUDINARY_URL?.trim()) {
+    try {
+      const parsed = new URL(process.env.CLOUDINARY_URL.trim());
+      return decodeURIComponent(parsed.username) || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 const cloudName = getCloudinaryCloudName();
+const apiKey = getApiKey();
 const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET?.trim() || '';
 const hasUrl = Boolean(process.env.CLOUDINARY_URL?.trim());
 const hasParts = Boolean(
-  process.env.CLOUDINARY_CLOUD_NAME?.trim() &&
-    process.env.CLOUDINARY_API_KEY?.trim() &&
+  cloudName &&
+    apiKey &&
     process.env.CLOUDINARY_API_SECRET?.trim()
 );
-const hasUnsignedPreset = Boolean(cloudName && uploadPreset);
+const hasUnsignedPreset = Boolean(cloudName && apiKey && uploadPreset);
 const isConfigured = hasUnsignedPreset || Boolean(cloudName && (hasUrl || hasParts));
 
 if (isConfigured) {
   if (hasUrl) {
     cloudinary.config({ secure: true });
-  } else if (hasParts) {
-    cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME!.trim(),
-      api_key: process.env.CLOUDINARY_API_KEY!.trim(),
-      api_secret: process.env.CLOUDINARY_API_SECRET!.trim(),
-      secure: true,
-    });
-  } else if (hasUnsignedPreset) {
+  } else if (hasUnsignedPreset || hasParts) {
     cloudinary.config({
       cloud_name: cloudName,
+      api_key: apiKey,
+      ...(hasParts
+        ? { api_secret: process.env.CLOUDINARY_API_SECRET!.trim() }
+        : {}),
       secure: true,
     });
   }
@@ -53,6 +68,7 @@ export function getCloudinaryStatus() {
   return {
     configured: isConfigured,
     cloudName: cloudName || null,
+    hasApiKey: Boolean(apiKey),
     mode: hasUnsignedPreset
       ? 'unsigned_preset'
       : hasUrl
@@ -66,8 +82,13 @@ export function getCloudinaryStatus() {
 }
 
 export async function verifyCloudinaryCredentials(): Promise<boolean> {
-  if (!isConfigured || hasUnsignedPreset) {
-    credentialsVerified = hasUnsignedPreset ? true : false;
+  if (!isConfigured) {
+    credentialsVerified = false;
+    return false;
+  }
+
+  if (hasUnsignedPreset) {
+    credentialsVerified = Boolean(cloudName && apiKey && uploadPreset);
     return credentialsVerified;
   }
 
@@ -133,6 +154,11 @@ export async function uploadMediaFile(
     if (message.includes('Invalid Signature')) {
       throw new Error(
         'Cloudinary credentials are invalid on the server. Set CLOUDINARY_URL or use CLOUDINARY_UPLOAD_PRESET with an unsigned preset.'
+      );
+    }
+    if (message.includes('Must supply api_key')) {
+      throw new Error(
+        'Cloudinary API key is missing on the server. Add CLOUDINARY_API_KEY on Render.'
       );
     }
     throw error;
