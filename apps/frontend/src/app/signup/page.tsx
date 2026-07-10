@@ -40,12 +40,16 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await api.post('/auth/signup', { email, password, displayName });
+      const res = await api.post('/auth/signup', { email, password, displayName }, { timeout: 45000 });
       if (res.data?.status === 'success') {
         setIsSuccess(true);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      if (err.code === 'ECONNABORTED') {
+        setError('Server phản hồi chậm (Render đang khởi động). Thử lại sau 30 giây.');
+      } else {
+        setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,8 @@ interface SendEmailOptions {
   text: string;
 }
 
+const SMTP_TIMEOUT_MS = 12_000;
+
 function isSmtpConfigured(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
@@ -22,6 +24,24 @@ function createTransporter() {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: SMTP_TIMEOUT_MS,
+    greetingTimeout: SMTP_TIMEOUT_MS,
+    socketTimeout: SMTP_TIMEOUT_MS,
+  });
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`SMTP timeout after ${ms}ms`)), ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
   });
 }
 
@@ -37,7 +57,10 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
 
   try {
     const transporter = createTransporter();
-    await transporter.sendMail({ from, to, subject, html, text });
+    await withTimeout(
+      transporter.sendMail({ from, to, subject, html, text }),
+      SMTP_TIMEOUT_MS
+    );
     console.log(`📧 Email sent to ${to}: ${subject}`);
     return true;
   } catch (error) {
@@ -45,6 +68,13 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
     console.log(`\n📧 FALLBACK — copy link manually:\n🔗 ${text}\n`);
     return false;
   }
+}
+
+export function queueVerificationEmail(to: string, verificationUrl: string) {
+  console.log(`📧 Verification link for ${to}: ${verificationUrl}`);
+  void sendVerificationEmail(to, verificationUrl).catch((error) => {
+    console.error('Background verification email failed:', error);
+  });
 }
 
 export async function sendVerificationEmail(to: string, verificationUrl: string) {

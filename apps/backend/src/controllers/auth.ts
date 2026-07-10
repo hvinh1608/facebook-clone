@@ -6,7 +6,7 @@ import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, JWT_ACCESS_EXPIRES_IN, JWT_REFRE
 import { AppError, BadRequestError, ConflictError, NotFoundError, UnauthorizedError } from '../utils/errors';
 import { AuthRequest } from '../middlewares/auth';
 import crypto from 'crypto';
-import { sendPasswordResetEmail, sendVerificationEmail } from '../utils/email';
+import { sendPasswordResetEmail, queueVerificationEmail } from '../utils/email';
 
 // Helper: Generate tokens
 const generateTokens = (userId: string, email: string, role: string) => {
@@ -38,7 +38,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
-      return next(new ConflictError('Email already registered'));
+      return next(new ConflictError('Email này đã được đăng ký. Hãy đăng nhập hoặc dùng email khác.'));
     }
 
     // Hash password
@@ -66,13 +66,11 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     });
 
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-    const emailSent = await sendVerificationEmail(normalizedEmail, verificationUrl);
+    queueVerificationEmail(normalizedEmail, verificationUrl);
 
     res.status(201).json({
       status: 'success',
-      message: emailSent
-        ? 'Đăng ký thành công. Vui lòng kiểm tra email để xác minh tài khoản.'
-        : 'Đăng ký thành công. Kiểm tra email hoặc terminal backend để lấy link xác minh.',
+      message: 'Đăng ký thành công. Vui lòng kiểm tra email để xác minh tài khoản (có thể mất vài phút).',
       data: {
         id: newUser.id,
         email: newUser.email,
@@ -144,13 +142,11 @@ export const resendVerification = async (req: Request, res: Response, next: Next
     });
 
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-    const emailSent = await sendVerificationEmail(normalizedEmail, verificationUrl);
+    queueVerificationEmail(normalizedEmail, verificationUrl);
 
     res.status(200).json({
       status: 'success',
-      message: emailSent
-        ? 'Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư.'
-        : 'Đã tạo link xác minh mới. Kiểm tra email hoặc terminal backend.',
+      message: 'Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư.',
     });
   } catch (error) {
     next(error);
@@ -316,13 +312,14 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     });
 
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    const emailSent = await sendPasswordResetEmail(normalizedEmail, resetUrl);
+    console.log(`📧 Password reset link for ${normalizedEmail}: ${resetUrl}`);
+    void sendPasswordResetEmail(normalizedEmail, resetUrl).catch((error) => {
+      console.error('Background password reset email failed:', error);
+    });
 
     res.status(200).json({
       status: 'success',
-      message: emailSent
-        ? 'Link đặt lại mật khẩu đã được gửi tới email của bạn.'
-        : 'Link đặt lại mật khẩu đã tạo. Kiểm tra email hoặc terminal backend.',
+      message: 'Link đặt lại mật khẩu đã được gửi tới email của bạn.',
     });
   } catch (error) {
     next(error);
