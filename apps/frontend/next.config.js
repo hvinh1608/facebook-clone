@@ -1,7 +1,15 @@
+const fs = require('fs');
 const path = require('path');
 
-// Monorepo: load shared env from repo root (same file backend uses)
-require('dotenv').config({ path: path.join(__dirname, '../../.env') });
+// Local monorepo dev: load root .env if present (not on Vercel)
+const rootEnv = path.join(__dirname, '../../.env');
+if (fs.existsSync(rootEnv)) {
+  try {
+    require('dotenv').config({ path: rootEnv });
+  } catch {
+    // optional in production
+  }
+}
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
 let apiHostPattern = null;
@@ -24,6 +32,8 @@ const nextConfig = {
   reactStrictMode: true,
   env: {
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL,
   },
   webpack: (config, { dev }) => {
     if (dev) {
