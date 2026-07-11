@@ -14,6 +14,8 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const { isAuthenticated, user, updateUser } = useAuthStore();
   const isProfilePage = pathname?.startsWith('/profile/');
+  const isWatchPage = pathname?.startsWith('/watch');
+  const hideSidebars = isProfilePage || isWatchPage;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -56,25 +58,27 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] ${isProfilePage ? 'pb-0' : 'pb-16 md:pb-0'}`}>
+    <div className={`min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] ${hideSidebars ? 'pb-0' : 'pb-16 md:pb-0'}`}>
       <Header />
 
       <div
         className={`flex flex-1 w-full mx-auto ${
-          isProfilePage ? 'max-w-none px-0' : 'max-w-[1464px] gap-4 xl:gap-6 px-0 md:px-4'
+          hideSidebars ? 'max-w-none px-0' : 'max-w-[1464px] gap-4 xl:gap-6 px-0 md:px-4'
         }`}
       >
-        {!isProfilePage && <Sidebar />}
+        {!hideSidebars && <Sidebar />}
 
         <main
           className={`flex-1 min-w-0 ${
-            isProfilePage ? 'px-0 py-0 pb-0 overflow-visible' : 'px-2 py-4 md:px-0 md:py-6 pb-24 md:pb-8 overflow-y-auto'
+            hideSidebars
+              ? 'px-0 py-0 pb-0 overflow-visible'
+              : 'px-2 py-4 md:px-0 md:py-6 pb-24 md:pb-8 overflow-y-auto'
           }`}
         >
           {children}
         </main>
 
-        {!isProfilePage && <RightSidebar />}
+        {!hideSidebars && <RightSidebar />}
       </div>
 
       <ChatBoxesContainer />
