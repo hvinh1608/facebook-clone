@@ -42,9 +42,14 @@ export default function MarketplacePage() {
             <button type="submit" className="py-2 bg-[#1877f2] text-white rounded-lg font-bold text-sm">Đăng tin</button>
           </form>
         )}
-        {loading ? <Loader2 className="w-8 h-8 animate-spin mx-auto" /> : listings.map((item) => (
-          <Link key={item.id} href={`/marketplace/${item.id}`} className="fb-card p-4 flex justify-between hover:bg-[var(--hover-bg)] transition-colors">
-            <div>
+        {loading ? <Loader2 className="w-8 h-8 animate-spin mx-auto" /> : listings.length === 0 ? (
+          <div className="fb-card p-6 text-center text-slate-500 text-sm">Chưa có tin đăng bán. Hãy đăng nhập và thử tạo tin mới.</div>
+        ) : listings.map((item) => (
+          <Link key={item.id} href={`/marketplace/${item.id}`} className="fb-card p-4 flex gap-4 hover:bg-[var(--hover-bg)] transition-colors">
+            {item.imageUrl && (
+              <img src={item.imageUrl} alt={item.title} className="w-24 h-24 rounded-lg object-cover shrink-0" />
+            )}
+            <div className="min-w-0">
               <h3 className="font-bold">{item.title}</h3>
               <p className="text-sm text-[#1877f2] font-semibold">{Number(item.price).toLocaleString('vi-VN')} đ</p>
               <p className="text-xs text-slate-500">{item.location} · {item.seller?.profile?.displayName}</p>

@@ -27,6 +27,7 @@ export default function Header() {
   const [showNotifyDropdown, setShowNotifyDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMessengerDropdown, setShowMessengerDropdown] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifyRef = useRef<HTMLDivElement>(null);
@@ -56,6 +57,7 @@ export default function Header() {
       }
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowRecentSearches(false);
+        setIsSearchFocused(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -113,8 +115,11 @@ export default function Header() {
     <header className="sticky top-0 z-40 w-full h-14 bg-white dark:bg-[#242526] border-b border-slate-200 dark:border-[#3e4042] px-3 md:px-4 flex items-center justify-between shadow-[var(--header-shadow)]">
 
       <div className="flex items-center gap-2.5 min-w-0">
-        <Link href="/" className="w-10 h-10 bg-[#1877f2] rounded-full flex items-center justify-center text-white text-3xl font-black italic tracking-tighter hover:opacity-95 transition-all select-none">
-          f
+        <Link href="/" className="flex-shrink-0 hover:opacity-95 transition-opacity" title="Facebook">
+          <svg viewBox="0 0 36 36" className="w-10 h-10 fill-[#1877f2]" xmlns="http://www.w3.org/2000/svg">
+            <path d="M36 18C36 8.05875 27.9413 0 18 0C8.05875 0 0 8.05875 0 18C0 26.9888 6.58688 34.4363 15.1875 35.7863V23.2031H10.6144V18H15.1875V14.0344C15.1875 9.5175 17.8763 7.02 21.9863 7.02C23.955 7.02 26.0156 7.37063 26.0156 7.37063V11.79H23.7506C21.5119 11.79 20.8125 13.1794 20.8125 14.6044V18H25.7963L25 23.2031H20.8125V35.7863C29.4131 34.4363 36 26.9888 36 18Z" />
+            <path d="M25 23.2031L25.7963 18H20.8125V14.6044C20.8125 13.1794 21.5119 11.79 23.7506 11.79H26.0156V7.37063C26.0156 7.37063 23.955 7.02 21.9863 7.02C17.8763 7.02 15.1875 9.5175 15.1875 14.0344V18H10.6144V23.2031H15.1875V35.7863C16.0894 35.9288 17.0119 36 18 36C18.9881 36 19.9106 35.9288 20.8125 35.7863V23.2031H25Z" fill="white" />
+          </svg>
         </Link>
 
         <div className="relative hidden sm:flex items-center" ref={searchRef}>
@@ -124,10 +129,12 @@ export default function Header() {
             placeholder="Tìm kiếm trên Facebook"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setShowRecentSearches(true)}
-            className="glass-input pl-9 pr-4 py-2 w-48 md:w-60 rounded-full text-sm dark:text-white placeholder-slate-500 focus:bg-white dark:focus:bg-[#242526]"
+            onFocus={() => { setShowRecentSearches(true); setIsSearchFocused(true); }}
+            className={`glass-input pr-4 py-2 w-48 md:w-60 rounded-full text-sm dark:text-white placeholder-slate-500 focus:bg-white dark:focus:bg-[#242526] transition-all duration-200 ${
+              isSearchFocused ? 'pl-4 w-52 md:w-72 shadow-[0_4px_12px_rgba(0,0,0,0.1)]' : 'pl-9'
+            }`}
           />
-          <Search className="absolute left-3 w-4 h-4 text-slate-500" />
+          {!isSearchFocused && <Search className="absolute left-3 w-4 h-4 text-slate-500 pointer-events-none" />}
           {showRecentSearches && recentSearches.length > 0 && (
             <div className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-[#242526] border border-slate-200 dark:border-[#3e4042] rounded-xl shadow-xl z-50 py-2">
               <p className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase">Tìm kiếm gần đây</p>
@@ -135,7 +142,7 @@ export default function Header() {
                 <button
                   key={q}
                   type="button"
-                  onClick={() => { router.push(`/search?q=${encodeURIComponent(q)}`); setShowRecentSearches(false); }}
+                  onClick={() => { router.push(`/search?q=${encodeURIComponent(q)}`); setShowRecentSearches(false); setIsSearchFocused(false); }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-[#3a3b3c]"
                 >
                   {q}

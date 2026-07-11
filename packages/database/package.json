@@ -8,6 +8,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "ts-node prisma/seed.ts",
+    "db:seed:vi": "ts-node prisma/seed-vietnamese-users.ts",
+    "db:seed:discovery": "ts-node prisma/seed-discovery-data.ts",
     "build": "prisma generate && tsc",
     "postinstall": "prisma generate"
   },

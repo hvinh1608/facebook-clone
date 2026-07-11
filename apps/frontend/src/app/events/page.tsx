@@ -46,14 +46,19 @@ export default function EventsPage() {
             <button type="submit" className="py-2 bg-[#1877f2] text-white rounded-lg font-bold text-sm">Tạo sự kiện</button>
           </form>
         )}
-        {loading ? <Loader2 className="w-8 h-8 animate-spin mx-auto" /> : events.map((ev) => (
-          <Link key={ev.id} href={`/events/${ev.id}`} className="fb-card p-4 flex justify-between items-start hover:bg-[var(--hover-bg)] transition-colors">
-            <div>
-              <h3 className="font-bold">{ev.title}</h3>
-              <p className="text-xs text-slate-500">{ev.location}</p>
-              <p className="text-xs text-[#1877f2] mt-1">{new Date(ev.startAt).toLocaleString('vi-VN')}</p>
+        {loading ? <Loader2 className="w-8 h-8 animate-spin mx-auto" /> : events.length === 0 ? (
+          <div className="fb-card p-6 text-center text-slate-500 text-sm">Chưa có sự kiện nào.</div>
+        ) : events.map((ev) => (
+          <Link key={ev.id} href={`/events/${ev.id}`} className="fb-card overflow-hidden hover:bg-[var(--hover-bg)] transition-colors">
+            {ev.coverUrl && <img src={ev.coverUrl} alt={ev.title} className="w-full h-40 object-cover" />}
+            <div className="p-4 flex justify-between items-start">
+              <div>
+                <h3 className="font-bold">{ev.title}</h3>
+                <p className="text-xs text-slate-500">{ev.location}</p>
+                <p className="text-xs text-[#1877f2] mt-1">{new Date(ev.startAt).toLocaleString('vi-VN')}</p>
+              </div>
+              <span className="text-xs px-3 py-1 bg-[#e7f3ff] text-[#1877f2] rounded-lg font-semibold shrink-0">Xem chi tiết</span>
             </div>
-            <span className="text-xs px-3 py-1 bg-[#e7f3ff] text-[#1877f2] rounded-lg font-semibold">Xem chi tiết</span>
           </Link>
         ))}
       </div>

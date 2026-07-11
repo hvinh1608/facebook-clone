@@ -347,12 +347,24 @@ function PostCardComponent({ post }: PostCardProps) {
     return `${post.content.slice(0, CONTENT_CHAR_LIMIT).trim()}...`;
   }, [post.content, isLongContent, isContentExpanded]);
 
-  const reactionSummary = useMemo(() => {
-    const types = new Set(post.reactions?.map((r: any) => r.type) || []);
-    return Array.from(types)
-      .slice(0, 3)
-      .map((t) => REACTION_EMOJI[t as string] || '👍')
-      .join('');
+  const reactionSummaryIcons = useMemo(() => {
+    const types = Array.from(new Set(post.reactions?.map((r: any) => r.type) || [])) as string[];
+    return types.slice(0, 3).map((type: string) => {
+      let bgClass = 'bg-[#1877f2]'; // Like
+      if (type === 'LOVE') bgClass = 'bg-red-500';
+      else if (type === 'HAHA' || type === 'WOW') bgClass = 'bg-amber-500';
+      else if (type === 'SAD') bgClass = 'bg-[#1877f2]';
+      else if (type === 'ANGRY') bgClass = 'bg-orange-600';
+
+      return (
+        <span 
+          key={type} 
+          className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] text-white border border-white dark:border-[#242526] select-none ${bgClass}`}
+        >
+          {REACTION_EMOJI[type] || '👍'}
+        </span>
+      );
+    });
   }, [post.reactions]);
 
   return (
@@ -548,20 +560,20 @@ function PostCardComponent({ post }: PostCardProps) {
       {post.media && post.media.length > 0 && <PostMedia media={post.media} />}
 
       {/* Stats Counter Row */}
-      <div className="flex justify-between items-center text-[13px] text-slate-500 border-b border-slate-200 dark:border-[#3e4042] pb-2 mt-1 select-none">
+      <div className="flex justify-between items-center text-[13px] text-slate-500 border-b border-slate-250 dark:border-[#3e4042] pb-2 mt-1 select-none">
         <button
           type="button"
           onClick={() => (post.reactions?.length ?? 0) > 0 && setShowReactionsModal(true)}
-          className="flex items-center gap-1 font-semibold text-slate-500 hover:underline"
+          className="flex items-center gap-1.5 font-semibold text-slate-500 hover:underline"
         >
           {(post.reactions?.length ?? 0) > 0 && (
             <>
-              <span className="flex items-center tracking-tighter">{reactionSummary}</span>
-              <span>{post.reactions?.length ?? 0}</span>
+              <span className="flex items-center -space-x-1">{reactionSummaryIcons}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{post.reactions?.length ?? 0}</span>
             </>
           )}
         </button>
-        <button onClick={handleToggleComments} className="hover:underline font-semibold">
+        <button onClick={handleToggleComments} className="hover:underline font-semibold text-xs text-slate-500">
           {post._count?.comments ?? 0} bình luận
         </button>
       </div>
@@ -577,26 +589,32 @@ function PostCardComponent({ post }: PostCardProps) {
           <button
             onClick={handleLikeButtonClick}
             className={`flex items-center justify-center gap-2 py-2.5 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-lg transition-colors w-full text-sm font-semibold ${
-              post.hasReacted ? getReactionStyle(post.reactionType) : 'text-slate-600 dark:text-slate-350'
+              post.hasReacted ? getReactionStyle(post.reactionType) : 'text-slate-650 dark:text-slate-350'
             }`}
           >
-            <span>👍</span>
-            {post.hasReacted ? (post.reactionType === 'LIKE' ? 'Thích' : post.reactionType) : 'Thích'}
+            <span className="text-lg leading-none">
+              {post.hasReacted ? (REACTION_EMOJI[post.reactionType] || '👍') : '👍'}
+            </span>
+            <span>
+              {post.hasReacted 
+                ? (REACTIONS_LIST.find((r) => r.type === post.reactionType)?.label.split(' ').slice(1).join(' ') || 'Thích')
+                : 'Thích'}
+            </span>
           </button>
 
           {showReactionsPanel && (
             <div
-              className="absolute left-1/2 bottom-[calc(100%-4px)] -translate-x-1/2 bg-white dark:bg-[#242526] border border-slate-200 dark:border-[#3e4042] rounded-full px-3 py-1.5 shadow-lg flex gap-3.5 animate-in fade-in duration-200 z-50"
+              className="fb-reactions-popover"
               onMouseEnter={handleReactionsMouseEnter}
               onMouseLeave={handleReactionsMouseLeave}
             >
-              <div className="absolute left-0 right-0 top-full h-6" />
+              <div className="absolute left-0 right-0 top-full h-5" />
               {REACTIONS_LIST.map((r) => (
                 <button
                   key={r.type}
                   onClick={() => handleReactionSelect(r.type)}
-                  className="hover:scale-135 transition-transform active:scale-95 text-xl p-1"
-                  title={r.type}
+                  className="fb-reaction-emoji hover:scale-135 transition-transform active:scale-95 text-2xl p-1"
+                  title={r.label}
                 >
                   {r.label.split(' ')[0]}
                 </button>

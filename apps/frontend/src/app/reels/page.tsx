@@ -94,6 +94,8 @@ export default function ReelsPage() {
                 loop
                 playsInline
                 muted
+                controls
+                preload="metadata"
               />
 
               {/* Right action bar */}

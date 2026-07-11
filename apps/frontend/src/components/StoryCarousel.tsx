@@ -230,27 +230,70 @@ export default function StoryCarousel() {
 
   return (
     <div className="w-full flex items-center gap-3 overflow-x-auto py-1 scrollbar-none">
-      <div className="flex flex-col items-center flex-shrink-0 cursor-pointer w-[72px]" onClick={() => fileInputRef.current?.click()}>
-        <div className="w-16 h-16 rounded-2xl bg-[var(--surface-muted)] dark:bg-[#18191a] border border-slate-200 dark:border-[#3e4042] flex items-center justify-center relative hover:border-[#1877f2] transition-all overflow-hidden">
-          <div className="w-9 h-9 rounded-full bg-[#1877f2] flex items-center justify-center shadow-sm">
+      {/* Create story card */}
+      <div 
+        className="fb-story-create-card flex-shrink-0"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <div className="fb-story-create-img-wrapper">
+          <img 
+            src={user?.avatarUrl || '/placeholder-avatar.png'} 
+            alt="My avatar" 
+            className="fb-story-create-img"
+          />
+        </div>
+        <div className="fb-story-create-info">
+          <div className="fb-story-create-btn">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,video/*" className="hidden" />
+          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 select-none">Tạo tin</span>
         </div>
-        <span className="text-[11px] text-slate-500 font-medium mt-1.5 w-full text-center truncate">Tạo tin</span>
+        <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*,video/*" className="hidden" />
       </div>
 
       {groupedStories.map((group) => {
         const hasUnviewed = group.stories.some((s) => !s.hasViewed);
+        const firstStory = group.stories[0];
+        
         return (
-          <div key={group.userId} className="flex flex-col items-center flex-shrink-0 cursor-pointer w-[72px]" onClick={() => handleOpenViewer(group)}>
-            <div className={`w-16 h-16 flex-shrink-0 p-[3px] rounded-full flex items-center justify-center ${
-              hasUnviewed ? 'bg-gradient-to-tr from-[#1877f2] via-[#a033ff] to-[#ff6b6b]' : 'bg-[#b0b3b8] dark:bg-[#3a3b3c]'
-            }`}>
-              <OptimizedAvatar src={group.avatarUrl} alt={group.displayName} size={58} className="border-2 border-[var(--card-bg)]" />
+          <div 
+            key={group.userId} 
+            className="fb-story-card flex-shrink-0"
+            onClick={() => handleOpenViewer(group)}
+          >
+            {/* Story Preview Media */}
+            {firstStory.mediaType === 'IMAGE' ? (
+              <img 
+                src={resolveMediaUrl(firstStory.mediaUrl)} 
+                alt={group.displayName} 
+                className="fb-story-img"
+                loading="lazy"
+              />
+            ) : (
+              <video 
+                src={resolveMediaUrl(firstStory.mediaUrl)} 
+                className="fb-story-img"
+                muted
+                playsInline
+              />
+            )}
+            
+            {/* Dark gradient overlay */}
+            <div className="fb-story-overlay" />
+            
+            {/* Avatar positioning */}
+            <div className={`fb-story-avatar ${!hasUnviewed ? 'fb-story-avatar-viewed' : ''}`}>
+              <OptimizedAvatar 
+                src={group.avatarUrl} 
+                alt={group.displayName} 
+                size={32} 
+                className="w-8 h-8 rounded-full"
+              />
             </div>
-            <span className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-1.5 w-full truncate text-center">
-              {group.userId === user?.id ? 'Tin của tôi' : group.displayName}
+            
+            {/* Author name at bottom */}
+            <span className="fb-story-name">
+              {group.userId === user?.id ? 'Tin của bạn' : group.displayName}
             </span>
           </div>
         );
