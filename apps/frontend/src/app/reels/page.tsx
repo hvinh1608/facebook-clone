@@ -99,7 +99,7 @@ export default function ReelsPage() {
               />
 
               {/* Right action bar */}
-              <div className="absolute right-3 bottom-24 flex flex-col items-center gap-5 z-10">
+              <div className="absolute right-3 bottom-28 flex flex-col items-center gap-5 z-20">
                 <button
                   type="button"
                   onClick={() => handleLike(post)}
@@ -127,22 +127,24 @@ export default function ReelsPage() {
                 </div>
               </div>
 
-              {/* Bottom info overlay */}
-              <div className="absolute bottom-0 left-0 right-14 p-4 bg-gradient-to-t from-black/80 to-transparent z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <OptimizedAvatar
-                    src={post.author?.profile?.avatarUrl}
-                    alt={post.author?.profile?.displayName}
-                    size={32}
-                    className="w-8 h-8 rounded-full border border-white/30"
-                  />
-                  <p className="text-white text-sm font-semibold">
-                    {post.author?.profile?.displayName}
-                  </p>
+              {/* Bottom info — above native controls, clicks pass through to video */}
+              <div className="absolute bottom-12 left-0 right-16 px-4 pb-1 z-10 pointer-events-none">
+                <div className="rounded-lg bg-gradient-to-t from-black/75 via-black/40 to-transparent px-1 pt-6 pb-2">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <OptimizedAvatar
+                      src={post.author?.profile?.avatarUrl}
+                      alt={post.author?.profile?.displayName}
+                      size={32}
+                      className="w-8 h-8 rounded-full border border-white/30"
+                    />
+                    <p className="text-white text-sm font-semibold drop-shadow-md">
+                      {post.author?.profile?.displayName}
+                    </p>
+                  </div>
+                  {post.content && (
+                    <p className="text-white/90 text-sm line-clamp-2 drop-shadow-md">{post.content}</p>
+                  )}
                 </div>
-                {post.content && (
-                  <p className="text-white/90 text-sm line-clamp-2">{post.content}</p>
-                )}
               </div>
             </div>
           );
