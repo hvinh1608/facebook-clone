@@ -562,19 +562,19 @@ export default function ProfilePage() {
         <div className="max-w-[940px] mx-auto w-full flex flex-col px-0 md:px-4">
           {/* Profile identity — overlaps cover, must not clip */}
           <div className="relative z-10 px-4 md:px-6 overflow-visible pb-2">
-            <div className="flex items-end gap-4 -mt-[56px] sm:-mt-[64px] md:-mt-[72px]">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-4 -mt-[56px] sm:-mt-[64px] md:-mt-[72px] text-center md:text-left">
               <div className="relative group flex-shrink-0">
                 <OptimizedAvatar
                   src={profileUser.profile?.avatarUrl}
                   alt={profileUser.profile?.displayName}
                   size={168}
-                  className="w-[132px] h-[132px] md:w-[168px] md:h-[168px] rounded-full object-cover border-4 border-[#242526] bg-[#3a3b3c]"
+                  className="w-[132px] h-[132px] md:w-[168px] md:h-[168px] rounded-full object-cover border-4 border-white dark:border-[#242526] bg-[#3a3b3c] shadow-md"
                 />
                 {isOwnProfile && (
                   <button
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
-                    className="absolute inset-0 bg-black/45 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                    className="absolute inset-0 bg-black/45 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white cursor-pointer"
                   >
                     <Camera className="w-7 h-7" />
                     <input type="file" ref={avatarInputRef} onChange={handleAvatarChange} className="hidden" accept="image/*" />
@@ -582,134 +582,132 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <div className="flex-1 min-w-0 pb-1">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-4">
-                  <div className="min-w-0">
-                    <h1 className="text-[24px] md:text-[32px] font-bold text-[var(--text-primary)] leading-tight">
-                      {profileUser.profile?.displayName}
-                    </h1>
-                    <p className="mt-1 text-[15px] text-[var(--text-secondary)] truncate">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('friends')}
-                        className="font-semibold text-[var(--text-primary)] hover:underline"
-                      >
-                        {friendsCount.toLocaleString('vi-VN')} người bạn
-                      </button>
-                      {profileUser.profile?.address && (
-                        <>
-                          <span className="mx-1">·</span>
-                          <span>{profileUser.profile.address}</span>
-                        </>
-                      )}
-                      {handleSlug && (
-                        <>
-                          <span className="mx-1">·</span>
-                          <span className="text-[#2374e1]">@{handleSlug}</span>
-                        </>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0 flex-nowrap self-start md:self-auto">
-                    {isOwnProfile ? (
+              <div className="flex-1 min-w-0 pb-1 flex flex-col md:flex-row md:items-end md:justify-between gap-4 w-full">
+                <div className="min-w-0">
+                  <h1 className="text-[24px] md:text-[32px] font-bold text-[var(--text-primary)] leading-tight">
+                    {profileUser.profile?.displayName}
+                  </h1>
+                  <p className="mt-1 text-[14px] text-[var(--text-secondary)] font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('friends')}
+                      className="font-bold text-[var(--text-primary)] hover:underline"
+                    >
+                      {friendsCount.toLocaleString('vi-VN')} người bạn
+                    </button>
+                    {profileUser.profile?.address && (
                       <>
-                        <Link
-                          href="/?story=create"
-                          className="flex items-center gap-2 px-4 py-2.5 bg-[#2374e1] hover:bg-[#1b67cc] text-white font-semibold rounded-lg text-[15px] transition-colors whitespace-nowrap"
-                        >
-                          Thêm vào tin
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditModalOpen(true)}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-[#3a3b3c] hover:bg-[#4e4f50] text-white font-semibold rounded-lg text-[15px] transition-colors whitespace-nowrap"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Chỉnh sửa trang cá nhân</span>
-                          <span className="sm:hidden">Chỉnh sửa</span>
-                        </button>
-                        <div className="relative" ref={moreMenuRef}>
-                          <button
-                            type="button"
-                            onClick={() => setShowMoreMenu(!showMoreMenu)}
-                            className="w-10 h-10 flex-shrink-0 bg-[#3a3b3c] hover:bg-[#4e4f50] text-white rounded-lg flex items-center justify-center transition-colors"
-                            aria-label="Tùy chọn khác"
-                          >
-                            <MoreHorizontal className="w-5 h-5" />
-                          </button>
-                          {showMoreMenu && (
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#242526] rounded-lg shadow-lg border border-[var(--border-soft)] p-1 z-20">
-                              <button
-                                type="button"
-                                onClick={handleShareProfile}
-                                className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--hover-bg)] rounded w-full text-left"
-                              >
-                                <Share2 className="w-4 h-4 text-[#1877f2]" /> Chia sẻ trang cá nhân
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleCopyProfileLink}
-                                className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--hover-bg)] rounded w-full text-left"
-                              >
-                                <Copy className="w-4 h-4 text-[#1877f2]" /> Sao chép liên kết
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleRelationshipAction}
-                          className={`flex items-center gap-2 px-4 py-2.5 font-semibold rounded-lg text-[15px] transition-colors whitespace-nowrap ${
-                            friendshipStatus === 'FRIENDS'
-                              ? 'bg-[#2374e1] hover:bg-[#1b67cc] text-white'
-                              : friendshipStatus === 'SENT'
-                              ? 'bg-[#3a3b3c] text-white'
-                              : 'bg-[#2374e1] hover:bg-[#1b67cc] text-white'
-                          }`}
-                        >
-                          {friendshipStatus === 'FRIENDS' && <UserMinus className="w-4 h-4 flex-shrink-0" />}
-                          {friendshipStatus === 'SENT' && <UserCheck className="w-4 h-4 flex-shrink-0" />}
-                          {friendshipStatus === 'RECEIVED' && <UserPlus className="w-4 h-4 flex-shrink-0" />}
-                          {friendshipStatus === 'NONE' && <UserPlus className="w-4 h-4 flex-shrink-0" />}
-                          {friendshipStatus === 'FRIENDS' && 'Bạn bè'}
-                          {friendshipStatus === 'SENT' && 'Đã gửi lời mời'}
-                          {friendshipStatus === 'RECEIVED' && 'Chấp nhận'}
-                          {friendshipStatus === 'NONE' && 'Thêm bạn bè'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleFollowToggle}
-                          className={`px-4 py-2.5 font-semibold rounded-lg text-[15px] transition-colors whitespace-nowrap ${
-                            isFollowing
-                              ? 'bg-[#3a3b3c] text-white hover:bg-[#4e4f50]'
-                              : 'bg-[#42b72a] hover:bg-[#36a420] text-white'
-                          }`}
-                        >
-                          {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openBox(targetUserId)}
-                          className="w-10 h-10 flex-shrink-0 bg-[#3a3b3c] hover:bg-[#4e4f50] rounded-lg text-white transition-colors flex items-center justify-center"
-                          title="Nhắn tin"
-                        >
-                          <MessageSquare className="w-5 h-5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleBlockUser}
-                          className="w-10 h-10 flex-shrink-0 bg-[#3a3b3c] hover:bg-[#4e4f50] text-red-400 hover:text-red-300 rounded-lg transition-colors flex items-center justify-center"
-                          title="Chặn"
-                        >
-                          <ShieldAlert className="w-5 h-5" />
-                        </button>
+                        <span className="mx-1.5">·</span>
+                        <span>{profileUser.profile.address}</span>
                       </>
                     )}
-                  </div>
+                    {handleSlug && (
+                      <>
+                        <span className="mx-1.5">·</span>
+                        <span className="text-[#1877f2] font-semibold">@{handleSlug}</span>
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 flex-shrink-0 flex-nowrap w-full md:w-auto mt-2 md:mt-0">
+                  {isOwnProfile ? (
+                    <>
+                      <Link
+                        href="/?story=create"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1877f2] hover:bg-[#166fe5] text-white font-bold rounded-lg text-[14px] transition-colors whitespace-nowrap shadow-sm"
+                      >
+                        Thêm vào tin
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] text-slate-800 dark:text-white font-bold rounded-lg text-[14px] transition-colors whitespace-nowrap"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span className="hidden sm:inline">Chỉnh sửa trang cá nhân</span>
+                        <span className="sm:hidden">Chỉnh sửa</span>
+                      </button>
+                      <div className="relative" ref={moreMenuRef}>
+                        <button
+                          type="button"
+                          onClick={() => setShowMoreMenu(!showMoreMenu)}
+                          className="w-9 h-9 flex-shrink-0 bg-slate-200 hover:bg-slate-300 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] text-slate-800 dark:text-white rounded-lg flex items-center justify-center transition-colors"
+                          aria-label="Tùy chọn khác"
+                        >
+                          <MoreHorizontal className="w-5 h-5" />
+                        </button>
+                        {showMoreMenu && (
+                          <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-[#242526] rounded-lg shadow-lg border border-[var(--border-soft)] p-1 z-20">
+                            <button
+                              type="button"
+                              onClick={handleShareProfile}
+                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--hover-bg)] rounded w-full text-left"
+                            >
+                              <Share2 className="w-4 h-4 text-[#1877f2]" /> Chia sẻ trang cá nhân
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCopyProfileLink}
+                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--hover-bg)] rounded w-full text-left"
+                            >
+                              <Copy className="w-4 h-4 text-[#1877f2]" /> Sao chép liên kết
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleRelationshipAction}
+                        className={`flex items-center gap-2 px-4 py-2 font-bold rounded-lg text-[14px] transition-colors whitespace-nowrap ${
+                          friendshipStatus === 'FRIENDS'
+                            ? 'bg-slate-200 hover:bg-slate-300 text-slate-850 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] dark:text-white'
+                            : friendshipStatus === 'SENT'
+                            ? 'bg-slate-200 hover:bg-slate-300 text-slate-850 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] dark:text-white'
+                            : 'bg-[#1877f2] hover:bg-[#166fe5] text-white'
+                        }`}
+                      >
+                        {friendshipStatus === 'FRIENDS' && <UserMinus className="w-4.5 h-4.5 flex-shrink-0" />}
+                        {friendshipStatus === 'SENT' && <UserCheck className="w-4.5 h-4.5 flex-shrink-0" />}
+                        {friendshipStatus === 'RECEIVED' && <UserPlus className="w-4.5 h-4.5 flex-shrink-0" />}
+                        {friendshipStatus === 'NONE' && <UserPlus className="w-4.5 h-4.5 flex-shrink-0" />}
+                        {friendshipStatus === 'FRIENDS' && 'Bạn bè'}
+                        {friendshipStatus === 'SENT' && 'Đã gửi lời mời'}
+                        {friendshipStatus === 'RECEIVED' && 'Chấp nhận'}
+                        {friendshipStatus === 'NONE' && 'Thêm bạn bè'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleFollowToggle}
+                        className={`px-4 py-2 font-bold rounded-lg text-[14px] transition-colors whitespace-nowrap ${
+                          isFollowing
+                            ? 'bg-slate-200 hover:bg-slate-300 text-slate-850 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] dark:text-white'
+                            : 'bg-[#1877f2] hover:bg-[#166fe5] text-white'
+                        }`}
+                      >
+                        {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openBox(targetUserId)}
+                        className="w-9 h-9 flex-shrink-0 bg-slate-200 hover:bg-slate-300 text-slate-850 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] dark:text-white rounded-lg transition-colors flex items-center justify-center"
+                        title="Nhắn tin"
+                      >
+                        <MessageSquare className="w-4.5 h-4.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBlockUser}
+                        className="w-9 h-9 flex-shrink-0 bg-slate-200 hover:bg-slate-300 text-red-500 hover:bg-red-50 dark:bg-[#3a3b3c] dark:hover:bg-[#4e4f50] dark:text-red-400 rounded-lg transition-colors flex items-center justify-center"
+                        title="Chặn"
+                      >
+                        <ShieldAlert className="w-4.5 h-4.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

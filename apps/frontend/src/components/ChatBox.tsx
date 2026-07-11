@@ -181,91 +181,125 @@ export default function ChatBox({ partnerUserId, isMinimized, unreadCount }: Cha
   }
 
   return (
-    <div className="w-[290px] h-[400px] bg-white dark:bg-[#242526] rounded-t-lg border border-slate-200 dark:border-[#3e4042] shadow-lg flex flex-col pointer-events-auto animate-chatbox-open">
+    <div className="w-[328px] h-[455px] bg-white dark:bg-[#242526] rounded-t-xl border border-slate-200 dark:border-[#3e4042] shadow-lg flex flex-col pointer-events-auto animate-chatbox-open">
       <div
-        className="px-3 py-2 border-b border-slate-200 dark:border-[#3e4042] bg-white dark:bg-[#242526] rounded-t-lg flex items-center justify-between cursor-pointer"
+        className="px-3 py-2 border-b border-slate-200 dark:border-[#3e4042] bg-white dark:bg-[#242526] rounded-t-xl flex items-center justify-between cursor-pointer"
         onDoubleClick={() => minimizeBox(partnerUserId)}
       >
         <Link
           href={`/profile/${partnerUserId}`}
-          className="flex items-center gap-2 max-w-[170px] hover:underline"
+          className="flex items-center gap-2 max-w-[190px] hover:underline"
         >
           <div className="relative flex-shrink-0">
             <OptimizedAvatar
               src={partnerAvatarUrl}
               alt={displayName}
-              size={28}
-              className="border border-slate-100 dark:border-transparent"
+              size={32}
+              className="border border-slate-100 dark:border-transparent w-8 h-8 rounded-full"
             />
-            <span className="absolute bottom-0 right-0 w-2 h-2 bg-[#31a24c] border border-white dark:border-[#242526] rounded-full"></span>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#31a24c] border-2 border-white dark:border-[#242526] rounded-full"></span>
           </div>
-          <span className="text-[12px] font-bold text-slate-800 dark:text-[#e4e6eb] truncate">
+          <span className="text-[13px] font-bold text-slate-800 dark:text-[#e4e6eb] truncate">
             {displayName}
           </span>
         </Link>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setActiveCall('audio')}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded text-[#1877f2]"
+            className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-[#1877f2] transition-colors"
             title="Gọi thoại"
           >
-            <Phone className="w-3.5 h-3.5" />
+            <Phone className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={() => setActiveCall('video')}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded text-[#1877f2]"
+            className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-[#1877f2] transition-colors"
             title="Gọi video"
           >
-            <Video className="w-3.5 h-3.5" />
+            <Video className="w-4 h-4" />
           </button>
           <button
             onClick={() => minimizeBox(partnerUserId)}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+            className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
             title="Thu nhỏ"
           >
-            <Minus className="w-3.5 h-3.5" />
+            <Minus className="w-4 h-4" />
           </button>
           <button
             onClick={() => closeBox(partnerUserId)}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+            className="w-7 h-7 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
             title="Đóng"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-2.5 flex flex-col gap-2 bg-slate-50/50 dark:bg-[#18191a]/30">
+      <div className="flex-1 min-h-0 overflow-y-auto p-2.5 flex flex-col gap-1 bg-slate-50/30 dark:bg-[#18191a]/30">
         {messages.length === 0 ? (
-          <div className="my-auto text-center text-[10px] text-slate-400 py-4 italic">
+          <div className="my-auto text-center text-[11px] text-slate-400 py-4 italic">
             Gửi tin nhắn để bắt đầu trò chuyện
           </div>
         ) : (
           messages.map((msg, idx) => {
             const isMine = msg.senderId === user?.id;
+            const prevMsg = idx > 0 ? messages[idx - 1] : null;
+            const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
+            const isFirstOfGroup = !prevMsg || prevMsg.senderId !== msg.senderId;
+            const isLastOfGroup = !nextMsg || nextMsg.senderId !== msg.senderId;
+
+            let bubbleRoundClass = '';
+            if (isMine) {
+              if (isFirstOfGroup && isLastOfGroup) {
+                bubbleRoundClass = 'rounded-[18px]';
+              } else if (isFirstOfGroup) {
+                bubbleRoundClass = 'rounded-[18px] rounded-br-[4px]';
+              } else if (isLastOfGroup) {
+                bubbleRoundClass = 'rounded-[18px] rounded-tr-[4px]';
+              } else {
+                bubbleRoundClass = 'rounded-[18px] rounded-br-[4px] rounded-tr-[4px]';
+              }
+            } else {
+              if (isFirstOfGroup && isLastOfGroup) {
+                bubbleRoundClass = 'rounded-[18px]';
+              } else if (isFirstOfGroup) {
+                bubbleRoundClass = 'rounded-[18px] rounded-bl-[4px]';
+              } else if (isLastOfGroup) {
+                bubbleRoundClass = 'rounded-[18px] rounded-tl-[4px]';
+              } else {
+                bubbleRoundClass = 'rounded-[18px] rounded-bl-[4px] rounded-tl-[4px]';
+              }
+            }
+
             return (
               <div
                 key={`${msg.id || idx}`}
                 className={`flex items-end gap-1.5 max-w-[85%] ${
                   isMine ? 'self-end flex-row-reverse' : 'self-start'
-                }`}
+                } ${isFirstOfGroup ? 'mt-2' : 'mt-0.5'}`}
               >
                 {!isMine && (
-                  <OptimizedAvatar
-                    src={partnerAvatarUrl}
-                    alt={displayName}
-                    size={20}
-                    className="flex-shrink-0"
-                  />
+                  <div className="w-7 flex-shrink-0">
+                    {isLastOfGroup ? (
+                      <OptimizedAvatar
+                        src={partnerAvatarUrl}
+                        alt={displayName}
+                        size={28}
+                        className="w-7 h-7 rounded-full object-cover border border-slate-100 dark:border-transparent"
+                      />
+                    ) : (
+                      <div className="w-7 h-7" />
+                    )}
+                  </div>
                 )}
                 <div
-                  className={`py-1.5 px-2.5 rounded-2xl text-[11px] leading-normal break-words whitespace-pre-wrap ${
+                  className={`py-1.5 px-3 text-[12px] leading-normal break-words whitespace-pre-wrap ${bubbleRoundClass} ${
                     isMine
-                      ? 'bg-[#1877f2] text-white rounded-br-none'
-                      : 'bg-slate-200 dark:bg-[#3a3b3c] text-slate-850 dark:text-[#e4e6eb] rounded-bl-none'
+                      ? 'bg-[#1877f2] text-white'
+                      : 'bg-slate-200 dark:bg-[#3a3b3c] text-slate-850 dark:text-[#e4e6eb]'
                   }`}
                 >
                   {msg.content}

@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Layout from '../../components/Layout';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { useSocket } from '../../context/SocketContext';
-import { MessageSquare, Send, Paperclip, Smile, Group, UserPlus, Trash, X, Plus, Loader2, Phone, Video, Reply } from 'lucide-react';
+import { MessageSquare, Send, Paperclip, Smile, Group, UserPlus, Trash, X, Plus, Loader2, Phone, Video, Reply, Info } from 'lucide-react';
 import { api } from '../../services/api';
 import { resolveMediaUrl } from '../../utils/media';
 import { resolveAvatarUrl } from '../../utils/avatar';
@@ -59,6 +60,8 @@ function ChatPageContent() {
     callType: 'audio' | 'video';
     offer: RTCSessionDescriptionInit;
   } | null>(null);
+
+  const [showDetailPanel, setShowDetailPanel] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -395,50 +398,105 @@ function ChatPageContent() {
                   </button>
                 )}
 
-                {!activeConv.isGroup && activeConv.chatPartner && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => startCall('audio')}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-[#1877f2]"
-                      title="Gọi thoại"
-                    >
-                      <Phone className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startCall('video')}
-                      className="p-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-[#1877f2]"
-                      title="Gọi video"
-                    >
-                      <Video className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  {!activeConv.isGroup && activeConv.chatPartner && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => startCall('audio')}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-[#1877f2]"
+                        title="Gọi thoại"
+                      >
+                        <Phone className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startCall('video')}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full text-[#1877f2]"
+                        title="Gọi video"
+                      >
+                        <Video className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailPanel(!showDetailPanel)}
+                    className={`p-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full transition-colors ${
+                      showDetailPanel ? 'text-[#1877f2] bg-blue-50 dark:bg-[#3a3b3c]' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'
+                    }`}
+                    title="Thông tin về cuộc trò chuyện"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Messages Body */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3.5">
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-1 bg-slate-50/10 dark:bg-[#18191a]/10">
                 {messages.length === 0 ? (
                   <div className="my-auto text-center py-10 flex flex-col items-center gap-2 text-slate-400">
                     <span className="text-3xl">👋</span>
                     <p className="text-xs">Gửi tin nhắn để bắt đầu trò chuyện.</p>
                   </div>
                 ) : (
-                  messages.map((msg) => {
+                  messages.map((msg, idx) => {
                     const isMine = msg.senderId === user?.id;
                     const avatar = resolveAvatarUrl(msg.sender?.profile?.avatarUrl);
+                    const prevMsg = idx > 0 ? messages[idx - 1] : null;
+                    const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
+                    const isFirstOfGroup = !prevMsg || prevMsg.senderId !== msg.senderId;
+                    const isLastOfGroup = !nextMsg || nextMsg.senderId !== msg.senderId;
+
+                    let bubbleRoundClass = '';
+                    if (isMine) {
+                      if (isFirstOfGroup && isLastOfGroup) {
+                        bubbleRoundClass = 'rounded-[18px]';
+                      } else if (isFirstOfGroup) {
+                        bubbleRoundClass = 'rounded-[18px] rounded-br-[4px]';
+                      } else if (isLastOfGroup) {
+                        bubbleRoundClass = 'rounded-[18px] rounded-tr-[4px]';
+                      } else {
+                        bubbleRoundClass = 'rounded-[18px] rounded-br-[4px] rounded-tr-[4px]';
+                      }
+                    } else {
+                      if (isFirstOfGroup && isLastOfGroup) {
+                        bubbleRoundClass = 'rounded-[18px]';
+                      } else if (isFirstOfGroup) {
+                        bubbleRoundClass = 'rounded-[18px] rounded-bl-[4px]';
+                      } else if (isLastOfGroup) {
+                        bubbleRoundClass = 'rounded-[18px] rounded-tl-[4px]';
+                      } else {
+                        bubbleRoundClass = 'rounded-[18px] rounded-bl-[4px] rounded-tl-[4px]';
+                      }
+                    }
 
                     return (
-                      <div key={msg.id} className={`flex items-end gap-2.5 max-w-[80%] ${isMine ? 'self-end flex-row-reverse' : 'self-start'}`}>
+                      <div
+                        key={msg.id}
+                        className={`flex items-end gap-2.5 max-w-[80%] ${
+                          isMine ? 'self-end flex-row-reverse' : 'self-start'
+                        } ${isFirstOfGroup ? 'mt-3.5' : 'mt-0.5'}`}
+                      >
                         {!isMine && (
-                          <OptimizedAvatar src={avatar} alt={msg.sender?.profile?.displayName || 'User'} size={28} className="w-7 h-7 rounded-full object-cover border border-slate-200 dark:border-transparent flex-shrink-0" />
+                          <div className="w-7 flex-shrink-0">
+                            {isLastOfGroup ? (
+                              <OptimizedAvatar
+                                src={avatar}
+                                alt={msg.sender?.profile?.displayName || 'User'}
+                                size={28}
+                                className="w-7 h-7 rounded-full object-cover border border-slate-200 dark:border-transparent flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-7 h-7" />
+                            )}
+                          </div>
                         )}
-                        <div className="flex flex-col gap-1">
-                          {msg.replyTo && (
+                        <div className="flex flex-col gap-0.5">
+                          {msg.replyTo && isFirstOfGroup && (
                             <div className={`text-[10px] px-2 py-1 rounded-lg border-l-2 ${
                               isMine ? 'bg-white/20 border-white/50' : 'bg-slate-100 dark:bg-[#2a2b2c] border-[#1877f2]'
-                            }`}>
+                            } mb-1`}>
                               <span className="font-semibold block opacity-80">
                                 {msg.replyTo.sender?.profile?.displayName || 'Tin nhắn'}
                               </span>
@@ -447,10 +505,10 @@ function ChatPageContent() {
                               </span>
                             </div>
                           )}
-                          <div className={`py-2 px-3.5 rounded-2xl text-xs ${
+                          <div className={`py-1.5 px-3.5 ${bubbleRoundClass} text-xs ${
                             isMine
-                              ? 'bg-[#1877f2] text-white rounded-br-none'
-                              : 'bg-slate-200 dark:bg-[#3a3b3c] text-slate-800 dark:text-[#e4e6eb] rounded-bl-none'
+                              ? 'bg-[#1877f2] text-white'
+                              : 'bg-slate-200 dark:bg-[#3a3b3c] text-slate-800 dark:text-[#e4e6eb]'
                           }`}>
                             {msg.content && <p className="leading-normal break-words whitespace-pre-wrap">{msg.content}</p>}
 
@@ -465,19 +523,21 @@ function ChatPageContent() {
                             )}
                           </div>
                           
-                          <div className={`flex items-center gap-1.5 text-[9px] text-slate-550 px-1.5 ${isMine ? 'justify-end' : ''}`}>
-                            <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            {!isMine && (
-                              <button onClick={() => setReplyTo(msg)} className="text-slate-400 hover:text-[#1877f2] flex items-center gap-0.5">
-                                <Reply className="w-2.5 h-2.5" /> Trả lời
-                              </button>
-                            )}
-                            {isMine && (
-                              <button onClick={() => removeMessage(msg.id)} className="text-red-500 hover:underline">
-                                Xóa
-                              </button>
-                            )}
-                          </div>
+                          {isLastOfGroup && (
+                            <div className={`flex items-center gap-1.5 text-[9px] text-slate-550 px-1.5 mt-0.5 ${isMine ? 'justify-end' : ''}`}>
+                              <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              {!isMine && (
+                                <button onClick={() => setReplyTo(msg)} className="text-slate-400 hover:text-[#1877f2] flex items-center gap-0.5">
+                                  <Reply className="w-2.5 h-2.5" /> Trả lời
+                                </button>
+                              )}
+                              {isMine && (
+                                <button onClick={() => removeMessage(msg.id)} className="text-red-500 hover:underline">
+                                  Xóa
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -488,7 +548,7 @@ function ChatPageContent() {
 
               {/* Typing box */}
               {activeTypers.length > 0 && (
-                <div className="absolute bottom-16 left-4 text-[10px] text-slate-500 italic animate-pulse">
+                <div className="absolute bottom-16 left-4 text-[10px] text-slate-550 italic animate-pulse">
                   {activeTypers.join(', ')} đang nhập...
                 </div>
               )}
@@ -501,7 +561,7 @@ function ChatPageContent() {
                       <span className="font-semibold text-[#1877f2] block">Trả lời {replyTo.sender?.profile?.displayName}</span>
                       <span className="text-slate-500 truncate block max-w-[250px]">{replyTo.content}</span>
                     </div>
-                    <button type="button" onClick={() => setReplyTo(null)} className="p-1 hover:bg-slate-200 rounded-full">
+                    <button type="button" onClick={() => setReplyTo(null)} className="p-1 hover:bg-slate-250 rounded-full">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -576,6 +636,86 @@ function ChatPageContent() {
             </div>
           )}
         </div>
+
+        {/* Right Detail Panel */}
+        {showDetailPanel && activeConv && (
+          <div className="w-72 border-l border-slate-200 dark:border-[#3e4042] bg-white dark:bg-[#242526] flex flex-col items-center p-5 overflow-y-auto z-10 animate-fade-in flex-shrink-0">
+            <div className="flex flex-col items-center gap-2.5 mt-4 text-center">
+              <img
+                src={
+                  activeConv.isGroup
+                    ? resolveAvatarUrl(null)
+                    : resolveAvatarUrl(activeConv.chatPartner?.avatarUrl)
+                }
+                alt={activeConv.isGroup ? activeConv.name || 'Group' : activeConv.chatPartner?.displayName}
+                className="w-18 h-18 rounded-full object-cover border-2 border-slate-100 dark:border-transparent shadow-sm"
+              />
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-[#e4e6eb]">
+                  {activeConv.isGroup ? activeConv.name : activeConv.chatPartner?.displayName}
+                </h4>
+                <p className="text-[11px] text-slate-550 mt-0.5">
+                  {activeConv.isGroup ? `${activeConv.members.length} thành viên` : 'Tin nhắn trực tiếp'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6 my-6 w-full justify-center text-center">
+              {!activeConv.isGroup && activeConv.chatPartner && (
+                <Link
+                  href={`/profile/${activeConv.chatPartner.userId}`}
+                  className="flex flex-col items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-[#1877f2] transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-[#3a3b3c] flex items-center justify-center">
+                    <MessageSquare className="w-4.5 h-4.5" />
+                  </div>
+                  <span className="text-[11px] font-semibold">Trang cá nhân</span>
+                </Link>
+              )}
+              <button
+                type="button"
+                className="flex flex-col items-center gap-1.5 text-slate-650 dark:text-slate-300 hover:text-[#1877f2] transition-colors"
+              >
+                <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-[#3a3b3c] flex items-center justify-center">
+                  <Phone className="w-4.5 h-4.5" />
+                </div>
+                <span className="text-[11px] font-semibold">Gọi thoại</span>
+              </button>
+            </div>
+
+            <div className="w-full border-t border-slate-150 dark:border-[#3e4042] pt-4">
+              <h5 className="text-[11px] font-bold text-slate-550 uppercase tracking-wider mb-3">
+                File chia sẻ
+              </h5>
+              
+              {messages.filter(m => m.mediaUrl).length === 0 ? (
+                <p className="text-[11px] text-slate-400 text-center py-4 italic">
+                  Chưa chia sẻ tệp nào.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-1.5 max-h-[250px] overflow-y-auto pr-1">
+                  {messages
+                    .filter((m) => m.mediaUrl)
+                    .map((msg, idx) => (
+                      <a
+                        key={`${msg.id || idx}`}
+                        href={resolveMediaUrl(msg.mediaUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="relative aspect-square bg-slate-100 dark:bg-[#3a3b3c] rounded-md overflow-hidden hover:opacity-90 transition-opacity shadow-sm"
+                      >
+                        {msg.mediaType === 'VIDEO' ? (
+                          <video src={resolveMediaUrl(msg.mediaUrl)} className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={resolveMediaUrl(msg.mediaUrl)} className="w-full h-full object-cover" alt="Media" />
+                        )}
+                      </a>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}

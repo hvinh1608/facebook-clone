@@ -29,15 +29,15 @@ export default function Sidebar() {
   }, [user]);
 
   const menuItems = [
-    { name: 'Bảng tin', href: '/', icon: Home, color: 'text-blue-500' },
+    { name: 'Bảng tin', href: '/', icon: Home, color: 'text-[#1877f2]' },
     { name: 'Bạn bè', href: '/friends', icon: Users, color: 'text-[#1877f2]' },
-    { name: 'Video', href: '/watch', icon: Play, color: 'text-[#e41e3f]' },
+    { name: 'Video', href: '/watch', icon: Play, color: 'text-[#1877f2]' },
     { name: 'Reels', href: '/reels', icon: Clapperboard, color: 'text-[#a033ff]' },
-    { name: 'Marketplace', href: '/marketplace', icon: Store, color: 'text-[#45bd62]' },
+    { name: 'Marketplace', href: '/marketplace', icon: Store, color: 'text-[#1877f2]' },
     { name: 'Sự kiện', href: '/events', icon: Calendar, color: 'text-[#f5533d]' },
-    { name: 'Trang', href: '/pages', icon: Flag, color: 'text-[#1877f2]' },
-    { name: 'Kỷ niệm', href: '/memories', icon: Clock, color: 'text-amber-500' },
-    { name: 'Nhóm', href: '/groups', icon: Compass, color: 'text-emerald-500' },
+    { name: 'Trang', href: '/pages', icon: Flag, color: 'text-orange-500' },
+    { name: 'Kỷ niệm', href: '/memories', icon: Clock, color: 'text-[#1877f2]' },
+    { name: 'Nhóm', href: '/groups', icon: Compass, color: 'text-[#1877f2]' },
   ];
 
   return (
