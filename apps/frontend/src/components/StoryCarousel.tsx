@@ -8,6 +8,7 @@ import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { useChatBoxesStore } from '../store/chatBoxesStore';
 import OptimizedAvatar from './OptimizedAvatar';
+import { resolveAvatarUrl, DEFAULT_AVATAR } from '../utils/avatar';
 import { resolveMediaUrl } from '../utils/media';
 
 interface StorySticker {
@@ -236,10 +237,13 @@ export default function StoryCarousel() {
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="fb-story-create-img-wrapper">
-          <img 
-            src={user?.avatarUrl || '/placeholder-avatar.png'} 
-            alt="My avatar" 
+          <img
+            src={resolveAvatarUrl(user?.avatarUrl)}
+            alt="My avatar"
             className="fb-story-create-img"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR;
+            }}
           />
         </div>
         <div className="fb-story-create-info">
