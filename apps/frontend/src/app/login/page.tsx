@@ -44,8 +44,8 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/google-login', { credential });
       if (res.data?.status === 'success') {
-        const { accessToken, user } = res.data.data;
-        login(user, accessToken);
+        const { accessToken, user, refreshToken } = res.data.data;
+        login(user, accessToken, refreshToken);
         router.push('/');
       }
     } catch (err: any) {
@@ -96,8 +96,8 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.data?.status === 'success') {
-        const { accessToken, user } = res.data.data;
-        login(user, accessToken);
+        const { accessToken, user, refreshToken } = res.data.data;
+        login(user, accessToken, refreshToken);
         router.push('/');
       }
     } catch (err: any) {
@@ -120,8 +120,8 @@ export default function LoginPage() {
       });
 
       if (res.data?.status === 'success') {
-        const { accessToken, user } = res.data.data;
-        login(user, accessToken);
+        const { accessToken, user, refreshToken } = res.data.data;
+        login(user, accessToken, refreshToken);
         router.push('/');
       }
     } catch {

@@ -56,6 +56,7 @@ async function completeAuthResponse(
     message,
     data: {
       accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -244,6 +245,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
       status: 'success',
       data: {
         accessToken,
+        refreshToken: token,
         user: {
           id: savedToken.user.id,
           email: savedToken.user.email,
@@ -269,7 +271,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
       });
     }
 
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', getRefreshCookieOptions());
 
     res.status(200).json({
       status: 'success',

@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import axios from 'axios';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import RightSidebar from './RightSidebar';
@@ -16,6 +17,26 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const isProfilePage = pathname?.startsWith('/profile/');
   const isWatchPage = pathname?.startsWith('/watch');
   const hideSidebars = isProfilePage || isWatchPage;
+
+  useEffect(() => {
+    const refreshSession = async () => {
+      const { isAuthenticated, refreshToken, login, logout } = useAuthStore.getState();
+      if (!isAuthenticated || !refreshToken) return;
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const res = await axios.post(`${apiUrl}/auth/refresh-token`, { refreshToken });
+        if (res.data?.status === 'success') {
+          const { accessToken, user, refreshToken: nextRefresh } = res.data.data;
+          login(user, accessToken, nextRefresh ?? refreshToken);
+        }
+      } catch {
+        logout();
+      }
+    };
+
+    void refreshSession();
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {

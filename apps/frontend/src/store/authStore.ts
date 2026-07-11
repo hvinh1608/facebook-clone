@@ -13,14 +13,14 @@ interface User {
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
-  login: (user: User, accessToken: string) => void;
+  login: (user: User, accessToken: string, refreshToken?: string | null) => void;
   logout: () => void;
   updateUser: (updatedUser: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
-  // Initialize state from localStorage if client-side
   const getInitialUser = () => {
     if (typeof window !== 'undefined') {
       try {
@@ -41,24 +41,45 @@ export const useAuthStore = create<AuthState>((set) => {
     return null;
   };
 
+  const getInitialRefreshToken = () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('nexus_refresh');
+    }
+    return null;
+  };
+
   const initialUser = getInitialUser();
   const initialToken = getInitialToken();
+  const initialRefreshToken = getInitialRefreshToken();
   const normalizedInitialUser = initialUser ? normalizeAuthUser(initialUser) : null;
 
   return {
     user: normalizedInitialUser,
     accessToken: initialToken,
+    refreshToken: initialRefreshToken,
     isAuthenticated: !!initialToken,
-    login: (user, accessToken) => {
+    login: (user, accessToken, refreshToken) => {
       const normalizedUser = normalizeAuthUser(user);
       localStorage.setItem('nexus_user', JSON.stringify(normalizedUser));
       localStorage.setItem('nexus_token', accessToken);
-      set({ user: normalizedUser, accessToken, isAuthenticated: true });
+      set((state) => {
+        const nextRefresh = refreshToken ?? state.refreshToken;
+        if (nextRefresh) {
+          localStorage.setItem('nexus_refresh', nextRefresh);
+        }
+        return {
+          user: normalizedUser,
+          accessToken,
+          refreshToken: nextRefresh,
+          isAuthenticated: true,
+        };
+      });
     },
     logout: () => {
       localStorage.removeItem('nexus_user');
       localStorage.removeItem('nexus_token');
-      set({ user: null, accessToken: null, isAuthenticated: false });
+      localStorage.removeItem('nexus_refresh');
+      set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
     },
     updateUser: (updatedUser) => {
       set((state) => {

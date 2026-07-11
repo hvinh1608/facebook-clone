@@ -1,42 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = [
-  '/login',
-  '/signup',
-  '/verify-email',
-  '/forgot-password',
-  '/reset-password',
-];
-
-const PUBLIC_PREFIXES = ['/_next', '/favicon', '/api'];
-
-function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return true;
-  }
-  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
-    return true;
-  }
-  return false;
-}
-
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (isPublicPath(pathname)) {
-    return NextResponse.next();
-  }
-
-  // Access token is stored in localStorage; refresh token is httpOnly cookie from backend
-  const refreshToken = request.cookies.get('refreshToken')?.value;
-
-  if (!refreshToken) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
+// Auth tokens live in localStorage (access) and localStorage/cookie (refresh from API domain).
+// Cross-origin deploys (Vercel + Render) cannot share httpOnly cookies with this middleware,
+// so route protection is handled client-side in LayoutContent.
+export function middleware(_request: NextRequest) {
   return NextResponse.next();
 }
 

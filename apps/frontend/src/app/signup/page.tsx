@@ -46,8 +46,8 @@ export default function SignupPage() {
     try {
       const res = await api.post('/auth/signup', { email, password, displayName }, { timeout: 45000 });
       if (res.data?.status === 'success') {
-        const { accessToken, user } = res.data.data;
-        login(user, accessToken);
+        const { accessToken, user, refreshToken } = res.data.data;
+        login(user, accessToken, refreshToken);
         router.push('/');
       }
     } catch (err: any) {

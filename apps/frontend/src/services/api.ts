@@ -3,22 +3,33 @@ import { useAuthStore } from '../store/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+const AUTH_NO_REFRESH_PATHS = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/refresh-token',
+  '/auth/google-login',
+  '/auth/logout',
+];
+
+function shouldSkipTokenRefresh(url?: string) {
+  if (!url) return false;
+  return AUTH_NO_REFRESH_PATHS.some((path) => url.includes(path));
+}
+
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // Crucial for receiving cookies
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request Interceptor: Attach JWT Access Token
 api.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // Let the browser set multipart boundary; a bare multipart/form-data header breaks uploads.
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
@@ -27,7 +38,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Silent Refresh Token rotation on 401
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -47,8 +57,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if error is 401 and request has not been retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !shouldSkipTokenRefresh(originalRequest?.url)
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -64,29 +77,29 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Attempt to rotate tokens via backend cookie refresh
+        const storedRefresh =
+          useAuthStore.getState().refreshToken ||
+          (typeof window !== 'undefined' ? localStorage.getItem('nexus_refresh') : null);
+
         const res = await axios.post(
           `${API_URL}/auth/refresh-token`,
-          {},
+          storedRefresh ? { refreshToken: storedRefresh } : {},
           { withCredentials: true }
         );
 
         if (res.data?.status === 'success') {
-          const { accessToken, user } = res.data.data;
+          const { accessToken, user, refreshToken } = res.data.data;
 
-          // Save new tokens
-          useAuthStore.getState().login(user, accessToken);
+          useAuthStore.getState().login(user, accessToken, refreshToken ?? storedRefresh);
 
-          // Retry pending request queue
           api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          
+
           processQueue(null, accessToken);
           return api(originalRequest);
         }
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Token rotation failed -> Session expired, force logout
         useAuthStore.getState().logout();
         return Promise.reject(refreshError);
       } finally {
