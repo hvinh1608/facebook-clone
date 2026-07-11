@@ -349,7 +349,7 @@ export default function Header() {
               src={user?.avatarUrl}
               alt={user?.displayName || 'Người dùng'}
               size={36}
-              className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-transparent hover:brightness-95 transition-all"
+              className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-transparent hover:brightness-95 transition-all [&_img]:!left-0.5"
             />
           </button>
 
