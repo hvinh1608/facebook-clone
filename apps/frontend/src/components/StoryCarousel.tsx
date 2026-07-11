@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Plus, X, ChevronLeft, ChevronRight, Eye, Type, Sticker, Send } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -40,6 +40,7 @@ export default function StoryCarousel() {
   const { user } = useAuthStore();
   const { openBox } = useChatBoxesStore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [groupedStories, setGroupedStories] = useState<GroupedStory[]>([]);
   const [activeUserStories, setActiveUserStories] = useState<GroupedStory | null>(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
@@ -55,6 +56,7 @@ export default function StoryCarousel() {
   const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const storyCreateOpenedRef = useRef(false);
   const activeStory = useMemo(
     () => activeUserStories?.stories[activeStoryIndex] ?? null,
     [activeStoryIndex, activeUserStories]
@@ -76,10 +78,21 @@ export default function StoryCarousel() {
   }, [fetchStories]);
 
   useEffect(() => {
-    if (searchParams.get('story') === 'create') {
-      fileInputRef.current?.click();
+    if (searchParams.get('story') !== 'create') {
+      storyCreateOpenedRef.current = false;
+      return;
     }
-  }, [searchParams]);
+    if (storyCreateOpenedRef.current) return;
+    storyCreateOpenedRef.current = true;
+
+    router.replace('/', { scroll: false });
+
+    const timer = window.setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [searchParams, router]);
 
   useEffect(() => {
     const handleOpenStoryCreate = () => fileInputRef.current?.click();
@@ -89,6 +102,7 @@ export default function StoryCarousel() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     setCreateFile(file);
     setCreatePreview(URL.createObjectURL(file));

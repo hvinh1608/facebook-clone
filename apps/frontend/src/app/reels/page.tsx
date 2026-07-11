@@ -296,9 +296,9 @@ export default function ReelsPage() {
       </Link>
 
       <Link
-        href="/?story=create"
+        href="/"
         className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${btnClass}`}
-        title="Tạo Reels"
+        title="Tạo video trên bảng tin"
       >
         <SquarePen className={`w-4 h-4 ${onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
       </Link>
