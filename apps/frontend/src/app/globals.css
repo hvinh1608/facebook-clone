@@ -482,3 +482,16 @@ body {
   border-color: var(--border-soft) !important;
 }
 
+@keyframes story-progress-ani {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.story-progress-active {
+  animation: story-progress-ani 4.5s linear forwards;
+}
+

@@ -383,8 +383,16 @@ export default function StoryCarousel() {
             <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex flex-col gap-2 z-20">
               <div className="flex gap-1 w-full">
                 {activeUserStories.stories.map((s, idx) => (
-                  <div key={s.id} className="h-1 flex-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full bg-brand-500 transition-all duration-3000 ${idx < activeStoryIndex ? 'w-full' : idx === activeStoryIndex ? 'w-full' : 'w-0'}`} />
+                  <div key={s.id} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full bg-white rounded-full ${
+                        idx < activeStoryIndex 
+                          ? 'w-full' 
+                          : idx === activeStoryIndex 
+                          ? 'story-progress-active' 
+                          : 'w-0'
+                      }`} 
+                    />
                   </div>
                 ))}
               </div>
