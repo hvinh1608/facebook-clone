@@ -9,7 +9,7 @@ import { api } from '../services/api';
 import { resolveGroupAvatarUrl } from '../utils/avatar';
 import OptimizedAvatar from './OptimizedAvatar';
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOnly = false }: { mobileOnly?: boolean }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [joinedGroups, setJoinedGroups] = useState<any[]>([]);
@@ -41,7 +41,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-full md:w-[280px] md:h-[calc(100vh-56px)] md:sticky md:top-14 bg-[#f0f2f5] dark:bg-[#18191a] px-2 py-3 md:px-0 md:py-4 flex flex-row md:flex-col justify-between fixed bottom-0 left-0 right-0 md:relative z-30 border-t md:border-t-0 border-slate-200 dark:border-transparent">
+    <aside className={`w-full md:w-[280px] md:h-[calc(100vh-56px)] md:sticky md:top-14 bg-[#f0f2f5] dark:bg-[#18191a] px-2 py-3 md:px-0 md:py-4 flex flex-row md:flex-col justify-between fixed bottom-0 left-0 right-0 md:relative z-30 border-t md:border-t-0 border-slate-200 dark:border-transparent ${mobileOnly ? 'md:hidden' : ''}`}>
 
       <div className="flex flex-row md:flex-col items-center md:items-stretch justify-around md:justify-start w-full gap-0.5 md:gap-1">
         <Link

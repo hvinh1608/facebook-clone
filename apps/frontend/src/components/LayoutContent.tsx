@@ -14,9 +14,13 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, updateUser } = useAuthStore();
-  const isProfilePage = pathname?.startsWith('/profile/');
-  const isWatchPage = pathname?.startsWith('/watch');
-  const hideSidebars = isProfilePage || isWatchPage;
+  // Sidebars only on home feed; discovery pages (friends, events, pages, etc.) use full width
+  const showSidebars = pathname === '/';
+  const hideSidebars = !showSidebars;
+  const isFullBleedPage =
+    pathname?.startsWith('/watch') ||
+    pathname?.startsWith('/profile/') ||
+    pathname?.startsWith('/reels');
 
   useEffect(() => {
     const refreshSession = async () => {
@@ -79,7 +83,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] ${hideSidebars ? 'pb-0' : 'pb-16 md:pb-0'}`}>
+    <div className="min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] pb-16 md:pb-0">
       <Header />
 
       <div
@@ -87,19 +91,22 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
           hideSidebars ? 'max-w-none px-0' : 'max-w-[1464px] gap-4 xl:gap-6 px-0 md:px-4'
         }`}
       >
-        {!hideSidebars && <Sidebar />}
+        {!showSidebars && <Sidebar mobileOnly />}
+        {showSidebars && <Sidebar />}
 
         <main
-          className={`flex-1 min-w-0 ${
-            hideSidebars
-              ? 'px-0 py-0 pb-0 overflow-visible'
-              : 'px-2 py-4 md:px-0 md:py-6 pb-24 md:pb-8 overflow-y-auto'
+          className={`flex-1 min-w-0 overflow-y-auto ${
+            isFullBleedPage
+              ? 'px-0 py-0 pb-0 md:pb-0'
+              : hideSidebars
+                ? 'px-2 py-4 md:px-6 md:py-6 pb-24 md:pb-8'
+                : 'px-2 py-4 md:px-0 md:py-6 pb-24 md:pb-8'
           }`}
         >
           {children}
         </main>
 
-        {!hideSidebars && <RightSidebar />}
+        {showSidebars && <RightSidebar />}
       </div>
 
       <ChatBoxesContainer />
