@@ -84,7 +84,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className={`min-h-screen flex flex-col ${isReelsPage ? 'bg-black text-white pb-0' : 'bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] pb-16 md:pb-0'}`}>
+    <div className={`min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] ${isReelsPage ? 'pb-0' : 'pb-16 md:pb-0'}`}>
       {!isReelsPage && <Header />}
 
       <div

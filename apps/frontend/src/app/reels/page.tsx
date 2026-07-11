@@ -211,27 +211,36 @@ export default function ReelsPage() {
     { id: 'profile', label: 'Trang cá nhân', icon: User },
   ];
 
-  const renderActionRail = (post: any, compact = false) => (
-    <div className={`flex flex-col items-center ${compact ? 'gap-4' : 'gap-3'}`}>
-      {!compact && (
+  const renderActionRail = (post: any, onVideo = false) => {
+    const btnClass = onVideo
+      ? 'bg-black/50 hover:bg-black/70 text-white'
+      : 'bg-white dark:bg-[#3a3b3c] hover:bg-slate-100 dark:hover:bg-[#4e4f50] text-slate-800 dark:text-white border border-slate-200 dark:border-transparent shadow-sm';
+    const labelClass = onVideo ? 'text-white' : 'text-slate-700 dark:text-white';
+    const navBtnClass = onVideo
+      ? 'bg-black/50 hover:bg-black/70 disabled:opacity-30 text-white'
+      : 'bg-white dark:bg-[#3a3b3c] hover:bg-slate-100 dark:hover:bg-[#4e4f50] disabled:opacity-30 text-slate-800 dark:text-white border border-slate-200 dark:border-transparent shadow-sm';
+
+    return (
+    <div className={`flex flex-col items-center ${onVideo ? 'gap-4' : 'gap-3'}`}>
+      {!onVideo && (
         <div className="flex flex-col gap-2 mb-1">
           <button
             type="button"
             onClick={() => scrollToIndex(activeIndex - 1)}
             disabled={activeIndex <= 0}
-            className="w-9 h-9 rounded-full bg-[#3a3b3c] hover:bg-[#4e4f50] disabled:opacity-30 flex items-center justify-center transition-colors"
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${navBtnClass}`}
             aria-label="Reels trước"
           >
-            <ChevronUp className="w-5 h-5 text-white" />
+            <ChevronUp className="w-5 h-5" />
           </button>
           <button
             type="button"
             onClick={() => scrollToIndex(activeIndex + 1)}
             disabled={activeIndex >= posts.length - 1}
-            className="w-9 h-9 rounded-full bg-[#3a3b3c] hover:bg-[#4e4f50] disabled:opacity-30 flex items-center justify-center transition-colors"
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${navBtnClass}`}
             aria-label="Reels tiếp"
           >
-            <ChevronDown className="w-5 h-5 text-white" />
+            <ChevronDown className="w-5 h-5" />
           </button>
         </div>
       )}
@@ -239,19 +248,21 @@ export default function ReelsPage() {
       <button
         type="button"
         onClick={() => handleLike(post)}
-        className="flex flex-col items-center gap-1 text-white group"
+        className={`flex flex-col items-center gap-1 group ${labelClass}`}
       >
         <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-          post.hasReacted ? 'bg-[#1877f2]/30' : 'bg-[#3a3b3c] group-hover:bg-[#4e4f50]'
+          post.hasReacted
+            ? onVideo ? 'bg-[#1877f2]/30' : 'bg-[#1877f2]/15 dark:bg-[#1877f2]/30'
+            : btnClass
         }`}>
-          <ThumbsUp className={`w-5 h-5 ${post.hasReacted ? 'fill-[#1877f2] text-[#1877f2]' : 'text-white'}`} />
+          <ThumbsUp className={`w-5 h-5 ${post.hasReacted ? 'fill-[#1877f2] text-[#1877f2]' : onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
         </div>
         <span className="text-xs font-semibold">{formatCount(post.reactions?.length || 0)}</span>
       </button>
 
-      <Link href={`/posts/${post.id}`} className="flex flex-col items-center gap-1 text-white group">
-        <div className="w-11 h-11 rounded-full bg-[#3a3b3c] group-hover:bg-[#4e4f50] flex items-center justify-center transition-colors">
-          <MessageCircle className="w-5 h-5 text-white" />
+      <Link href={`/posts/${post.id}`} className={`flex flex-col items-center gap-1 group ${labelClass}`}>
+        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${btnClass}`}>
+          <MessageCircle className={`w-5 h-5 ${onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
         </div>
         <span className="text-xs font-semibold">{formatCount(post._count?.comments ?? 0)}</span>
       </Link>
@@ -259,20 +270,20 @@ export default function ReelsPage() {
       <button
         type="button"
         onClick={() => handleShare(post.id, post.content)}
-        className="flex flex-col items-center gap-1 text-white group"
+        className={`flex flex-col items-center gap-1 group ${labelClass}`}
       >
-        <div className="w-11 h-11 rounded-full bg-[#3a3b3c] group-hover:bg-[#4e4f50] flex items-center justify-center transition-colors">
-          <Share2 className="w-5 h-5 text-white" />
+        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${btnClass}`}>
+          <Share2 className={`w-5 h-5 ${onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
         </div>
         <span className="text-xs font-semibold">{formatCount(0)}</span>
       </button>
 
       <button
         type="button"
-        className="w-11 h-11 rounded-full bg-[#3a3b3c] hover:bg-[#4e4f50] flex items-center justify-center transition-colors"
+        className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${btnClass}`}
         aria-label="Tuỳ chọn"
       >
-        <MoreHorizontal className="w-5 h-5 text-white" />
+        <MoreHorizontal className={`w-5 h-5 ${onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
       </button>
 
       <Link href={`/profile/${user?.id}`} className="mt-2 relative">
@@ -280,25 +291,26 @@ export default function ReelsPage() {
           src={user?.avatarUrl}
           alt={user?.displayName || 'Bạn'}
           size={36}
-          className="w-9 h-9 rounded-full border-2 border-white object-cover"
+          className={`w-9 h-9 rounded-full object-cover ${onVideo ? 'border-2 border-white' : 'border-2 border-slate-200 dark:border-white/30'}`}
         />
       </Link>
 
       <Link
         href="/?story=create"
-        className="w-9 h-9 rounded-full bg-[#3a3b3c] hover:bg-[#4e4f50] flex items-center justify-center transition-colors"
+        className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${btnClass}`}
         title="Tạo Reels"
       >
-        <SquarePen className="w-4 h-4 text-white" />
+        <SquarePen className={`w-4 h-4 ${onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
       </Link>
     </div>
-  );
+    );
+  };
 
   if (loading) {
     return (
       <Layout>
-        <div className="h-[100vh] bg-black flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-white animate-spin" />
+        <div className="h-[100vh] bg-[#f0f2f5] dark:bg-[#18191a] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-[#1877f2] animate-spin" />
         </div>
       </Layout>
     );
@@ -306,10 +318,10 @@ export default function ReelsPage() {
 
   return (
     <Layout>
-      <div className="h-[100vh] bg-black flex overflow-hidden">
+      <div className="h-[100vh] bg-[#f0f2f5] dark:bg-[#18191a] flex overflow-hidden">
         {/* Left Reels nav — desktop */}
-        <aside className="hidden md:flex w-[280px] lg:w-[300px] flex-shrink-0 flex-col px-4 py-5 border-r border-[#3e4042]/60">
-          <h1 className="text-[28px] font-bold text-white mb-6 px-2">Reels</h1>
+        <aside className="hidden md:flex w-[280px] lg:w-[300px] flex-shrink-0 flex-col px-4 py-5 border-r border-slate-200 dark:border-[#3e4042]/60 bg-[#f0f2f5] dark:bg-[#18191a]">
+          <h1 className="text-[28px] font-bold text-[#050505] dark:text-white mb-6 px-2">Reels</h1>
           <nav className="flex flex-col gap-1">
             {navItems.map(({ id, label, icon: Icon }) => (
               <button
@@ -318,8 +330,8 @@ export default function ReelsPage() {
                 onClick={() => setActiveTab(id)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
                   activeTab === id
-                    ? 'bg-[#3a3b3c] text-white font-bold'
-                    : 'text-[#e4e6eb] hover:bg-[#3a3b3c]/60 font-semibold'
+                    ? 'bg-white dark:bg-[#3a3b3c] text-[#050505] dark:text-white font-bold shadow-sm'
+                    : 'text-slate-700 dark:text-[#e4e6eb] hover:bg-slate-200 dark:hover:bg-[#3a3b3c]/60 font-semibold'
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -330,14 +342,16 @@ export default function ReelsPage() {
         </aside>
 
         {/* Mobile tab bar */}
-        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/90 backdrop-blur border-b border-[#3e4042]/60 px-3 py-2 flex gap-1">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#242526]/95 backdrop-blur border-b border-slate-200 dark:border-[#3e4042]/60 px-3 py-2 flex gap-1">
           {navItems.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
-                activeTab === id ? 'bg-[#3a3b3c] text-white' : 'text-[#b0b3b8]'
+                activeTab === id
+                  ? 'bg-[#e7f3ff] dark:bg-[#3a3b3c] text-[#1877f2] dark:text-white'
+                  : 'text-slate-600 dark:text-[#b0b3b8]'
               }`}
             >
               {label}
@@ -349,9 +363,9 @@ export default function ReelsPage() {
         <div className="flex-1 flex items-center justify-center min-w-0 pt-12 md:pt-0">
           {posts.length === 0 ? (
             <div className="text-center px-6">
-              <Clapperboard className="w-12 h-12 text-[#3a3b3c] mx-auto mb-3" />
-              <p className="text-white font-semibold mb-1">Chưa có Reels</p>
-              <p className="text-[#b0b3b8] text-sm">
+              <Clapperboard className="w-12 h-12 text-slate-300 dark:text-[#3a3b3c] mx-auto mb-3" />
+              <p className="text-[#050505] dark:text-white font-semibold mb-1">Chưa có Reels</p>
+              <p className="text-slate-500 dark:text-[#b0b3b8] text-sm">
                 {activeTab === 'following'
                   ? 'Theo dõi thêm bạn bè để xem Reels của họ.'
                   : activeTab === 'profile'
@@ -383,7 +397,7 @@ export default function ReelsPage() {
                       data-index={index}
                       className="h-[100vh] md:h-[calc(100vh-24px)] snap-start snap-always flex items-center justify-center py-2 md:py-3"
                     >
-                      <div className="relative w-full h-full max-h-[92vh] rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-white/10">
+                      <div className="relative w-full h-full max-h-[92vh] rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-slate-200/80 dark:ring-white/10">
                         <video
                           ref={(el) => setVideoRef(post.id, el)}
                           src={resolveMediaUrl(video.url)}
@@ -480,7 +494,7 @@ export default function ReelsPage() {
               {/* Desktop action rail — beside video */}
               {activePost && (
                 <div className="hidden lg:flex flex-shrink-0 self-end pb-8">
-                  {renderActionRail(activePost)}
+                  {renderActionRail(activePost, false)}
                 </div>
               )}
             </div>
