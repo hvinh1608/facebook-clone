@@ -289,7 +289,6 @@ export default function StoryCarousel() {
                 src={group.avatarUrl} 
                 alt={group.displayName} 
                 size={32} 
-                square
                 className="w-8 h-8"
               />
             </div>
