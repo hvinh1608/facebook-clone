@@ -30,6 +30,43 @@ const getRefreshCookieOptions = () => {
   };
 };
 
+async function completeAuthResponse(
+  res: Response,
+  user: { id: string; email: string; role: string; profile?: { displayName: string | null; avatarUrl: string | null } | null },
+  statusCode = 200,
+  message = 'Logged in successfully'
+) {
+  const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role);
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  await prisma.refreshToken.create({
+    data: {
+      userId: user.id,
+      token: refreshToken,
+      expiresAt,
+    },
+  });
+
+  res.cookie('refreshToken', refreshToken, getRefreshCookieOptions());
+
+  res.status(statusCode).json({
+    status: 'success',
+    message,
+    data: {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        displayName: user.profile?.displayName,
+        avatarUrl: user.profile?.avatarUrl,
+      },
+    },
+  });
+}
+
 export const signup = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password, displayName } = req.body;
@@ -45,19 +82,19 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
-    // Create User & Profile
+    // Create User & Profile — Facebook-style: use app immediately, no email gate
     const newUser = await prisma.user.create({
       data: {
         email: normalizedEmail,
         passwordHash,
-        verificationToken,
+        isVerified: true,
         profile: {
           create: {
             displayName,
           },
+        },
+        userSettings: {
+          create: {},
         },
       },
       include: {
@@ -65,22 +102,7 @@ export const signup = async (req: Request, res: Response, next: NextFunction) =>
       },
     });
 
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-    queueVerificationEmail(normalizedEmail, verificationUrl);
-
-    const exposeVerifyLink =
-      process.env.EXPOSE_VERIFY_LINK === 'true' || process.env.NODE_ENV !== 'production';
-
-    res.status(201).json({
-      status: 'success',
-      message: 'Đăng ký thành công. Vui lòng kiểm tra email để xác minh tài khoản (có thể mất vài phút).',
-      data: {
-        id: newUser.id,
-        email: newUser.email,
-        displayName: newUser.profile?.displayName,
-        ...(exposeVerifyLink ? { verificationUrl } : {}),
-      },
-    });
+    await completeAuthResponse(res, newUser, 201, 'Đăng ký thành công');
   } catch (error) {
     next(error);
   }
@@ -175,48 +197,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return next(new AppError('Your account has been blocked', 403));
     }
 
-    if (!user.isVerified) {
-      return next(new AppError('Vui lòng xác minh email trước khi đăng nhập. Kiểm tra hộp thư hoặc đăng ký lại.', 403));
-    }
-
     // Check password
     const isPasswordCorrect = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordCorrect) {
       return next(new UnauthorizedError('Incorrect email or password'));
     }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role);
-
-    // Save refresh token to db
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        token: refreshToken,
-        expiresAt,
-      },
-    });
-
-    // Set HTTP-Only Cookie
-    res.cookie('refreshToken', refreshToken, getRefreshCookieOptions());
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Logged in successfully',
-      data: {
-        accessToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          displayName: user.profile?.displayName,
-          avatarUrl: user.profile?.avatarUrl,
-        },
-      },
-    });
+    await completeAuthResponse(res, user);
   } catch (error) {
     next(error);
   }
@@ -470,46 +457,11 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       return next(new NotFoundError('Không tìm thấy người dùng'));
     }
 
-    if (!user.isVerified) {
-      await prisma.user.update({ where: { id: user.id }, data: { isVerified: true } });
-      user.isVerified = true;
-    }
-
     if (user.status === 'BLOCKED') {
       return next(new AppError('Tài khoản của bạn đã bị khóa', 403));
     }
 
-    // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user.id, user.email, user.role);
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        token: refreshToken,
-        expiresAt,
-      },
-    });
-
-    res.cookie('refreshToken', refreshToken, getRefreshCookieOptions());
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Đăng nhập Google thành công',
-      data: {
-        accessToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          displayName: user.profile?.displayName,
-          avatarUrl: user.profile?.avatarUrl,
-          googleId: sub,
-        },
-      },
-    });
+    await completeAuthResponse(res, user, 200, 'Đăng nhập Google thành công');
   } catch (error) {
     next(error);
   }

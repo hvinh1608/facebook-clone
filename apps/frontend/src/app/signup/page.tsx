@@ -2,19 +2,22 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { HelpCircle, CheckCircle2, ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { HelpCircle, ChevronLeft } from 'lucide-react';
 import { api } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 import AuthShell, { MetaWordmark } from '../../components/auth/AuthShell';
 
 export default function SignupPage() {
+  const router = useRouter();
+  const { login } = useAuthStore();
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [verificationUrl, setVerificationUrl] = useState('');
 
   const [birthDay, setBirthDay] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
@@ -43,8 +46,9 @@ export default function SignupPage() {
     try {
       const res = await api.post('/auth/signup', { email, password, displayName }, { timeout: 45000 });
       if (res.data?.status === 'success') {
-        setVerificationUrl(res.data.data?.verificationUrl || '');
-        setIsSuccess(true);
+        const { accessToken, user } = res.data.data;
+        login(user, accessToken);
+        router.push('/');
       }
     } catch (err: any) {
       if (err.code === 'ECONNABORTED') {
@@ -56,41 +60,6 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
-
-  if (isSuccess) {
-    return (
-      <AuthShell variant="centered">
-        <div className="w-full max-w-[432px] fb-auth-card p-6 flex flex-col gap-5 items-center text-center">
-          <CheckCircle2 className="w-14 h-14 text-[#1877f2]" />
-          <h2 className="text-xl font-bold text-[#1c1e21]">Kiểm tra Email của bạn</h2>
-          <p className="text-sm text-[#65676b]">
-            Chúng tôi đã tạo liên kết xác thực và gửi đến <span className="font-semibold text-[#1c1e21]">{email}</span>.
-          </p>
-
-          <div className="p-4 bg-[#f0f2f5] border border-[#dddfe2] rounded-md text-[12px] text-left flex flex-col gap-2 w-full text-[#65676b]">
-            <span className="font-bold text-[#1c1e21] uppercase tracking-wide block">Xác minh tài khoản:</span>
-            {verificationUrl ? (
-              <>
-                <span>Email có thể không gửi được từ server. Dùng link sau để kích hoạt:</span>
-                <a href={verificationUrl} className="font-semibold text-[#1877f2] break-all hover:underline">
-                  {verificationUrl}
-                </a>
-              </>
-            ) : (
-              <>
-                <span>Kiểm tra hộp thư (cả mục Spam).</span>
-                <span>Nếu không nhận được email, vào Render → Logs để lấy link xác minh.</span>
-              </>
-            )}
-          </div>
-
-          <Link href="/login" className="fb-auth-btn-primary flex items-center justify-center text-base">
-            Đi đến trang đăng nhập
-          </Link>
-        </div>
-      </AuthShell>
-    );
-  }
 
   return (
     <AuthShell variant="centered">
