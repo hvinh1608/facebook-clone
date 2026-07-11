@@ -33,7 +33,7 @@ export default function OptimizedAvatar({
           sizes="(max-width: 768px) 50vw, 25vw"
           priority={priority}
           unoptimized={resolvedSrc.startsWith('data:') || resolvedSrc.includes('/uploads/')}
-          className="object-cover"
+          className="object-cover object-center"
         />
       </div>
     );
@@ -51,7 +51,7 @@ export default function OptimizedAvatar({
         sizes={`${size}px`}
         priority={priority}
         unoptimized={resolvedSrc.startsWith('data:') || resolvedSrc.includes('/uploads/')}
-        className="object-cover"
+        className="object-cover object-center"
       />
     </div>
   );
