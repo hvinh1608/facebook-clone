@@ -199,12 +199,18 @@ export default function Header() {
           </Link>
         )}
 
-        {/* Messenger — popup on desktop, full page on mobile */}
+        {/* Messenger — popup on desktop, /chat on mobile */}
         <div className="relative" ref={messengerRef}>
           <button
             type="button"
-            onClick={() => setShowMessengerDropdown(!showMessengerDropdown)}
-            className="fb-icon-button relative hidden md:flex"
+            onClick={() => {
+              if (window.matchMedia('(max-width: 767px)').matches) {
+                router.push('/chat');
+              } else {
+                setShowMessengerDropdown(!showMessengerDropdown);
+              }
+            }}
+            className="fb-icon-button relative"
             title="Messenger"
           >
             <MessageSquare className="w-5 h-5" />
@@ -212,19 +218,9 @@ export default function Header() {
               <span className="absolute top-0 right-0 w-3 h-3 bg-[#e41e3f] rounded-full border-2 border-white dark:border-[#242526]"></span>
             )}
           </button>
-          <Link
-            href="/chat"
-            className="fb-icon-button relative md:hidden"
-            title="Messenger"
-          >
-            <MessageSquare className="w-5 h-5" />
-            {hasUnreadMessages && (
-              <span className="absolute top-0 right-0 w-3 h-3 bg-[#e41e3f] rounded-full border-2 border-white dark:border-[#242526]"></span>
-            )}
-          </Link>
 
           {showMessengerDropdown && (
-            <div className="absolute right-0 mt-2.5 w-80 max-h-96 overflow-y-auto bg-white dark:bg-[#242526] border border-slate-200 dark:border-[#3e4042] rounded-xl shadow-xl flex flex-col z-50">
+            <div className="absolute right-0 mt-2.5 w-80 max-h-96 overflow-y-auto bg-white dark:bg-[#242526] border border-slate-200 dark:border-[#3e4042] rounded-xl shadow-xl flex flex-col z-50 max-md:hidden">
               <div className="p-4 border-b border-slate-200 dark:border-[#3e4042] flex items-center justify-between">
                 <span className="font-bold text-sm">Messenger</span>
                 <Link
