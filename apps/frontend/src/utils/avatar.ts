@@ -27,6 +27,16 @@ export const DEFAULT_GROUP_AVATAR =
     </svg>`
   );
 
+/** Square cover placeholder for the "Create story" card background */
+export const DEFAULT_STORY_CREATE_COVER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 130" fill="none">
+      <rect width="112" height="130" fill="#E4E6EB"/>
+      <path d="M56 58c8.3 0 15-6.7 15-15s-6.7-15-15-15-15 6.7-15 15 6.7 15 15 15zm0 7.5c-10 0-30 5-30 15V95h60V80.5c0-10-20-15-30-15z" fill="#B0B3B8"/>
+    </svg>`
+  );
+
 export const resolveGroupCoverUrl = (value?: string | null) => {
   if (!value || !value.trim()) return DEFAULT_GROUP_COVER;
   return resolveMediaUrl(value) || DEFAULT_GROUP_COVER;

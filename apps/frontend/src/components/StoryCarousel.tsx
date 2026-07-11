@@ -8,7 +8,7 @@ import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { useChatBoxesStore } from '../store/chatBoxesStore';
 import OptimizedAvatar from './OptimizedAvatar';
-import { resolveAvatarUrl, DEFAULT_AVATAR } from '../utils/avatar';
+import { resolveAvatarUrl, DEFAULT_STORY_CREATE_COVER } from '../utils/avatar';
 import { resolveMediaUrl } from '../utils/media';
 
 interface StorySticker {
@@ -113,9 +113,7 @@ export default function StoryCarousel() {
       if (caption.trim()) formData.append('caption', caption.trim());
       if (stickers.length > 0) formData.append('stickerData', JSON.stringify(stickers));
 
-      const res = await api.post('/stories', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/stories', formData);
       if (res.data?.status === 'success') {
         setShowCreateModal(false);
         setCreateFile(null);
@@ -238,11 +236,11 @@ export default function StoryCarousel() {
       >
         <div className="fb-story-create-img-wrapper">
           <img
-            src={resolveAvatarUrl(user?.avatarUrl)}
+            src={user?.avatarUrl?.trim() ? resolveAvatarUrl(user.avatarUrl) : DEFAULT_STORY_CREATE_COVER}
             alt="My avatar"
             className="fb-story-create-img"
             onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR;
+              (e.currentTarget as HTMLImageElement).src = DEFAULT_STORY_CREATE_COVER;
             }}
           />
         </div>
@@ -291,7 +289,8 @@ export default function StoryCarousel() {
                 src={group.avatarUrl} 
                 alt={group.displayName} 
                 size={32} 
-                className="w-8 h-8 rounded-full"
+                square
+                className="w-8 h-8"
               />
             </div>
             

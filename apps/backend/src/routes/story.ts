@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middlewares/auth';
-import { upload } from '../middlewares/upload';
+import { handleUpload } from '../middlewares/upload';
 import {
   createStory,
   getFeedStories,
@@ -13,7 +13,7 @@ const router = Router();
 
 router.use(protect);
 
-router.post('/', upload.single('media'), createStory);
+router.post('/', handleUpload('media'), createStory);
 router.get('/feed', getFeedStories);
 router.post('/view/:id', viewStory);
 router.get('/views/:id', getStoryViews);

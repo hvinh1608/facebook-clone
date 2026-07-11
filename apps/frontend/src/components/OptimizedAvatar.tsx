@@ -8,6 +8,7 @@ interface OptimizedAvatarProps {
   fill?: boolean;
   className?: string;
   priority?: boolean;
+  square?: boolean;
 }
 
 export default function OptimizedAvatar({
@@ -17,12 +18,14 @@ export default function OptimizedAvatar({
   fill = false,
   className = '',
   priority = false,
+  square = false,
 }: OptimizedAvatarProps) {
   const resolvedSrc = resolveAvatarUrl(src);
+  const shapeClass = square ? 'rounded-md' : 'rounded-full';
 
   if (fill) {
     return (
-      <div className={`relative overflow-hidden bg-[#e4e6eb] w-full h-full ${className}`}>
+      <div className={`relative overflow-hidden bg-[#e4e6eb] w-full h-full ${shapeClass} ${className}`}>
         <Image
           src={resolvedSrc}
           alt={alt || 'Avatar'}
@@ -38,7 +41,7 @@ export default function OptimizedAvatar({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-full flex-shrink-0 bg-[#e4e6eb] ${className}`}
+      className={`relative overflow-hidden ${shapeClass} flex-shrink-0 bg-[#e4e6eb] ${className}`}
       style={{ width: size, height: size, minWidth: size, minHeight: size }}
     >
       <Image

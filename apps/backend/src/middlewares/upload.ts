@@ -20,24 +20,48 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req: any, file: any, cb: any) => {
-  const allowedTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'video/mp4',
-    'video/webm',
-    'video/ogg',
-    'video/quicktime', // MOV
-  ];
+const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'video/quicktime', // MOV
+]);
 
-  if (allowedTypes.includes(file.mimetype)) {
+const allowedExtensions = new Set([
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.heic',
+  '.heif',
+  '.avif',
+  '.mp4',
+  '.webm',
+  '.ogg',
+  '.mov',
+]);
+
+const fileFilter = (req: any, file: any, cb: any) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowedMimeTypes.has(file.mimetype) || allowedExtensions.has(ext)) {
     cb(null, true);
-  } else {
-    cb(new BadRequestError('Only image (jpg, jpeg, png, gif, webp) and video (mp4, webm, ogg, mov) files are allowed!') as any);
+    return;
   }
+
+  cb(
+    new BadRequestError(
+      'Chỉ hỗ trợ ảnh (jpg, png, gif, webp, heic) và video (mp4, webm, mov).'
+    ) as any
+  );
 };
 
 export const upload = multer({
@@ -47,3 +71,20 @@ export const upload = multer({
     fileSize: 100 * 1024 * 1024, // Max size 100MB for video upload
   },
 });
+
+export const handleUpload =
+  (field: string) => (req: any, res: any, next: any) => {
+    upload.single(field)(req, res, (err: any) => {
+      if (!err) return next();
+
+      if (err instanceof multer.MulterError) {
+        const message =
+          err.code === 'LIMIT_FILE_SIZE'
+            ? 'File quá lớn. Tối đa 100MB.'
+            : err.message;
+        return next(new BadRequestError(message));
+      }
+
+      return next(err);
+    });
+  };
