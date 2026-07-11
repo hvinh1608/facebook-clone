@@ -122,6 +122,10 @@ export default function Header() {
           </svg>
         </Link>
 
+        <Link href="/search" className="sm:hidden fb-icon-button flex-shrink-0" title="Tìm kiếm">
+          <Search className="w-5 h-5" />
+        </Link>
+
         <div className="relative hidden sm:flex items-center" ref={searchRef}>
         <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
           <input

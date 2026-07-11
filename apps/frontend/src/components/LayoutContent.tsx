@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import axios from 'axios';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import RightSidebar from './RightSidebar';
+import MobileBottomNav from './MobileBottomNav';
+import MobileMenuSheet from './MobileMenuSheet';
 import ChatBoxesContainer from './ChatBoxesContainer';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
@@ -13,8 +15,9 @@ import { api } from '../services/api';
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user, updateUser } = useAuthStore();
-  // Sidebars only on home feed; discovery pages (friends, events, pages, etc.) use full width
+  const { isAuthenticated, user, updateUser, logout } = useAuthStore();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const showSidebars = pathname === '/';
   const hideSidebars = !showSidebars;
   const isReelsPage = pathname?.startsWith('/reels');
@@ -24,8 +27,12 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     isReelsPage;
 
   useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     const refreshSession = async () => {
-      const { isAuthenticated, refreshToken, login, logout } = useAuthStore.getState();
+      const { isAuthenticated, refreshToken, login, logout: signOut } = useAuthStore.getState();
       if (!isAuthenticated || !refreshToken) return;
 
       try {
@@ -36,7 +43,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
           login(user, accessToken, nextRefresh ?? refreshToken);
         }
       } catch {
-        logout();
+        signOut();
       }
     };
 
@@ -72,6 +79,11 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     refreshCurrentUser();
   }, [isAuthenticated, updateUser]);
 
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#18191a] flex items-center justify-center">
@@ -84,26 +96,25 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] ${isReelsPage ? 'pb-0' : 'pb-16 md:pb-0'}`}>
-      {!isReelsPage && <Header />}
+    <div className="min-h-screen flex flex-col bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <Header />
 
       <div
         className={`flex flex-1 w-full mx-auto ${
           hideSidebars ? 'max-w-none px-0' : 'max-w-[1464px] gap-4 xl:gap-6 px-0 md:px-4'
         }`}
       >
-        {!isReelsPage && !showSidebars && <Sidebar mobileOnly />}
         {showSidebars && <Sidebar />}
 
         <main
           className={`flex-1 min-w-0 overflow-y-auto ${
             isReelsPage
-              ? 'px-0 py-0 pb-0 h-[100vh] overflow-hidden'
+              ? 'px-0 py-0 pb-0 h-[calc(100dvh-3.5rem-3.5rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3.5rem)] overflow-hidden'
               : isFullBleedPage
-                ? 'px-0 py-0 pb-0 md:pb-0'
+                ? 'px-0 py-0 pb-0'
                 : hideSidebars
-                  ? 'px-2 py-4 md:px-6 md:py-6 pb-24 md:pb-8'
-                  : 'px-2 py-4 md:px-0 md:py-6 pb-24 md:pb-8'
+                  ? 'px-2 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6'
+                  : 'px-2 py-3 sm:px-0 sm:py-4 md:py-6'
           }`}
         >
           {children}
@@ -112,7 +123,16 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
         {showSidebars && <RightSidebar />}
       </div>
 
-      {!isReelsPage && <ChatBoxesContainer />}
+      <MobileBottomNav onMenuOpen={() => setMobileMenuOpen(true)} />
+      <MobileMenuSheet
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        onLogout={handleLogout}
+      />
+
+      <div className="hidden md:block">
+        <ChatBoxesContainer />
+      </div>
     </div>
   );
 }

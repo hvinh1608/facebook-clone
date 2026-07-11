@@ -309,7 +309,7 @@ export default function ReelsPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="h-[100vh] bg-[#f0f2f5] dark:bg-[#18191a] flex items-center justify-center">
+        <div className="h-full min-h-[50vh] flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-[#1877f2] animate-spin" />
         </div>
       </Layout>
@@ -318,9 +318,9 @@ export default function ReelsPage() {
 
   return (
     <Layout>
-      <div className="h-[100vh] bg-[#f0f2f5] dark:bg-[#18191a] flex overflow-hidden">
+      <div className="h-full flex flex-col md:flex-row overflow-hidden bg-[#f0f2f5] dark:bg-[#18191a]">
         {/* Left Reels nav — desktop */}
-        <aside className="hidden md:flex w-[280px] lg:w-[300px] flex-shrink-0 flex-col px-4 py-5 border-r border-slate-200 dark:border-[#3e4042]/60 bg-[#f0f2f5] dark:bg-[#18191a]">
+        <aside className="hidden md:flex w-[280px] lg:w-[300px] flex-shrink-0 flex-col px-4 py-5 border-r border-slate-200 dark:border-[#3e4042]/60">
           <h1 className="text-[28px] font-bold text-[#050505] dark:text-white mb-6 px-2">Reels</h1>
           <nav className="flex flex-col gap-1">
             {navItems.map(({ id, label, icon: Icon }) => (
@@ -341,8 +341,8 @@ export default function ReelsPage() {
           </nav>
         </aside>
 
-        {/* Mobile tab bar */}
-        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#242526]/95 backdrop-blur border-b border-slate-200 dark:border-[#3e4042]/60 px-3 py-2 flex gap-1">
+        {/* Mobile Reels tabs */}
+        <div className="md:hidden flex-shrink-0 px-2 py-2 flex gap-1 border-b border-slate-200 dark:border-[#3e4042] bg-[#f0f2f5] dark:bg-[#18191a]">
           {navItems.map(({ id, label }) => (
             <button
               key={id}
@@ -360,7 +360,7 @@ export default function ReelsPage() {
         </div>
 
         {/* Center stage */}
-        <div className="flex-1 flex items-center justify-center min-w-0 pt-12 md:pt-0">
+        <div className="flex-1 flex items-center justify-center min-w-0 min-h-0">
           {posts.length === 0 ? (
             <div className="text-center px-6">
               <Clapperboard className="w-12 h-12 text-slate-300 dark:text-[#3a3b3c] mx-auto mb-3" />
@@ -395,7 +395,7 @@ export default function ReelsPage() {
                         else slideRefs.current.delete(index);
                       }}
                       data-index={index}
-                      className="h-[100vh] md:h-[calc(100vh-24px)] snap-start snap-always flex items-center justify-center py-2 md:py-3"
+                      className="h-full min-h-0 snap-start snap-always flex items-center justify-center py-1 md:py-3"
                     >
                       <div className="relative w-full h-full max-h-[92vh] rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-slate-200/80 dark:ring-white/10">
                         <video

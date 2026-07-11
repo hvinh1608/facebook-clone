@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   description: 'Kết nối bạn bè và thế giới xung quanh bạn trên Facebook.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover' as const,
+};
+
 export default function RootLayout({
   children,
 }: {
