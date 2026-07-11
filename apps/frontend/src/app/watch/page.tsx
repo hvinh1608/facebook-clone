@@ -14,7 +14,6 @@ export default function WatchPage() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
-  const mainVideoRef = useRef<HTMLVideoElement>(null);
 
   const fetchWatch = useCallback(async (reset = false) => {
     if (isLoading) return;
@@ -63,15 +62,7 @@ export default function WatchPage() {
     };
   }, [fetchWatch, nextCursor, isLoading]);
 
-  useEffect(() => {
-    const v = mainVideoRef.current;
-    if (!v) return;
-    v.muted = true;
-    v.play().catch(() => {});
-  }, [activeId]);
-
   const activePost = posts.find((p) => p.id === activeId) || posts[0];
-  const activeVideo = activePost?.media?.find((m: any) => m.type === 'VIDEO');
 
   return (
     <Layout>
@@ -84,21 +75,6 @@ export default function WatchPage() {
               <p className="text-xs text-slate-500">Tự động phát khi xem (tắt tiếng)</p>
             </div>
           </div>
-
-          {activeVideo && (
-            <div className="fb-card overflow-hidden bg-black aspect-video">
-              <video
-                ref={mainVideoRef}
-                key={activeVideo.url}
-                src={resolveMediaUrl(activeVideo.url)}
-                controls
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-contain"
-              />
-            </div>
-          )}
 
           {activePost && <PostCard post={activePost} />}
 
