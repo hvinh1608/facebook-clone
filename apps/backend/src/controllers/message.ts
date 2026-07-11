@@ -4,6 +4,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { emitToConversation } from '../socket';
 import { createAndPushNotification } from '../utils/notifications';
+import { canSendMessage } from '../utils/privacy';
 import { uploadMediaFile } from '../utils/cloudinary';
 
 export const getConversations = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -133,6 +134,11 @@ export const createConversation = async (req: AuthRequest, res: Response, next: 
 
       if (currentUserId === targetUserId) {
         return next(new BadRequestError('Cannot start a chat with yourself'));
+      }
+
+      const allowed = await canSendMessage(currentUserId, targetUserId);
+      if (!allowed) {
+        return next(new ForbiddenError('You cannot message this user based on their privacy settings'));
       }
 
       // Check if 1-1 conversation already exists

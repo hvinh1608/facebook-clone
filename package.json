@@ -5,7 +5,8 @@
   "workspaces": [
     "apps/frontend",
     "apps/backend",
-    "packages/database"
+    "packages/database",
+    "packages/shared"
   ],
   "scripts": {
     "db:generate": "npm run db:generate --workspace=packages/database",

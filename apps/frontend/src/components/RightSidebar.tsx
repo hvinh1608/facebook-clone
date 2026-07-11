@@ -24,7 +24,8 @@ export default function RightSidebar() {
   const { openBox } = useChatBoxesStore();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [friends, setFriends] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [contactSearch, setContactSearch] = useState('');
+  const [showContactSearch, setShowContactSearch] = useState(false);
 
   const fetchSuggestions = useCallback(async () => {
     try {
@@ -71,13 +72,17 @@ export default function RightSidebar() {
   }, [fetchFriends]);
 
   const onlineFriends = useMemo(() => {
+    const q = contactSearch.trim().toLowerCase();
     return [...friends]
       .map((friend) => ({
         ...friend,
         isOnline: onlineUsers.includes(friend.id),
       }))
+      .filter((friend) =>
+        !q || (friend.profile?.displayName || '').toLowerCase().includes(q)
+      )
       .sort((a, b) => Number(b.isOnline) - Number(a.isOnline));
-  }, [friends, onlineUsers]);
+  }, [friends, onlineUsers, contactSearch]);
 
   const handleAddFriend = async (userId: string) => {
     try {
@@ -153,6 +158,7 @@ export default function RightSidebar() {
           <div className="flex items-center gap-1">
             <button
               type="button"
+              onClick={() => setShowContactSearch((v) => !v)}
               className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:text-[#b0b3b8] dark:hover:bg-[#3a3b3c] transition-colors"
               title="Tìm kiếm"
             >
@@ -167,6 +173,19 @@ export default function RightSidebar() {
             </button>
           </div>
         </div>
+
+        {showContactSearch && (
+          <div className="px-2 pb-2">
+            <input
+              type="text"
+              value={contactSearch}
+              onChange={(e) => setContactSearch(e.target.value)}
+              placeholder="Tìm liên hệ..."
+              className="w-full px-3 py-2 text-sm rounded-full bg-slate-100 dark:bg-[#3a3b3c] border-0 focus:outline-none dark:text-white"
+              autoFocus
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-0.5 overflow-y-auto pr-1 min-h-0">
           {onlineFriends.length === 0 ? (

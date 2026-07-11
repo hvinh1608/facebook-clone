@@ -36,7 +36,10 @@ interface FeedState {
   isLoading: boolean;
   hasInitialized: boolean;
   sort: FeedSort;
+  hasNewPosts: boolean;
   fetchFeed: (reset?: boolean, sort?: FeedSort) => Promise<void>;
+  refreshFeed: () => Promise<void>;
+  markNewPostsAvailable: () => void;
   setSort: (sort: FeedSort) => void;
   addPost: (post: Post) => void;
   editPost: (postId: string, content: string, privacy: string) => Promise<void>;
@@ -59,21 +62,30 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   nextCursor: null,
   isLoading: false,
   hasInitialized: false,
+  hasNewPosts: false,
   sort: 'recent' as FeedSort,
 
   setSort: (sort) => set({ sort }),
+
+  markNewPostsAvailable: () => set({ hasNewPosts: true }),
+
+  refreshFeed: async () => {
+    await get().fetchFeed(true);
+    set({ hasNewPosts: false });
+  },
 
   fetchFeed: async (reset = false, sortOverride?: FeedSort) => {
     if (get().isLoading) return;
     if (!reset && !get().nextCursor && get().hasInitialized) return;
 
     const sort = sortOverride ?? get().sort;
+    const apiSort = sort === 'popular' ? 'top' : 'recent';
 
     try {
       set({ isLoading: true });
       const cursor = reset ? '' : get().nextCursor || '';
       
-      const response = await api.get(`/posts/feed?limit=10&cursor=${cursor}&sort=${sort}`);
+      const response = await api.get(`/posts/feed?limit=10&cursor=${cursor}&sort=${apiSort}`);
       if (response.data?.status === 'success') {
         const { posts: newPosts, nextCursor } = response.data.data;
         const currentPosts = get().posts;
@@ -82,6 +94,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
           nextCursor,
           hasInitialized: true,
           sort,
+          hasNewPosts: reset ? false : get().hasNewPosts,
         });
       }
     } catch (error) {

@@ -101,8 +101,19 @@ export const createMemory = async (req: AuthRequest, res: Response, next: NextFu
 // Marketplace
 export const getMarketplaceListings = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const { q, minPrice, maxPrice, location } = req.query;
+    const where: any = { status: 'ACTIVE' };
+    if (q && typeof q === 'string' && q.trim()) {
+      where.title = { contains: q.trim(), mode: 'insensitive' };
+    }
+    if (location && typeof location === 'string' && location.trim()) {
+      where.location = { contains: location.trim(), mode: 'insensitive' };
+    }
+    if (minPrice) where.price = { ...(where.price || {}), gte: parseFloat(minPrice as string) };
+    if (maxPrice) where.price = { ...(where.price || {}), lte: parseFloat(maxPrice as string) };
+
     const listings = await prisma.marketplaceListing.findMany({
-      where: { status: 'ACTIVE' },
+      where,
       include: { seller: { include: { profile: true } } },
       orderBy: { createdAt: 'desc' },
       take: 50,

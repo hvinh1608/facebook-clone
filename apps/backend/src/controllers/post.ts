@@ -4,6 +4,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { AppError, BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { createAndPushNotification } from '../utils/notifications';
 import { uploadMediaFile } from '../utils/cloudinary';
+import { broadcastFeedUpdate } from '../socket';
 
 export const postInclude = {
   author: { include: { profile: true } },
@@ -19,8 +20,27 @@ export const postInclude = {
   reactions: {
     select: { id: true, userId: true, type: true },
   },
-  _count: { select: { comments: true, reactions: true } },
+  _count: { select: { comments: true, reactions: true, shares: true } },
 };
+
+export const feedPostInclude = (currentUserId: string) => ({
+  author: { include: { profile: true } },
+  group: true,
+  media: true,
+  sharedPost: {
+    include: {
+      author: { include: { profile: true } },
+      media: true,
+      _count: { select: { comments: true } },
+    },
+  },
+  reactions: {
+    where: { userId: currentUserId },
+    select: { id: true, userId: true, type: true },
+    take: 1,
+  },
+  _count: { select: { comments: true, reactions: true, shares: true } },
+});
 
 type PollOptionData = { id: string; text: string; voterIds: string[] };
 
@@ -134,6 +154,8 @@ export const createPost = async (req: AuthRequest, res: Response, next: NextFunc
       status: 'success',
       data: fullPost,
     });
+
+    broadcastFeedUpdate({ type: 'post:created', postId: post.id });
   } catch (error) {
     next(error);
   }
@@ -187,9 +209,9 @@ export const getFeedPosts = async (req: AuthRequest, res: Response, next: NextFu
           buildFeedWhere(currentUserId, friendIds, followingOnlyIds, followingIds, joinedGroupIds, blockedUserIds),
         ],
       },
-      include: postInclude,
+      include: feedPostInclude(currentUserId),
       orderBy: sort === 'top' ? { reactions: { _count: 'desc' } } : { createdAt: 'desc' },
-      take: limit + 1, // Get 1 extra to check for next page
+      take: limit + 1,
       cursor: cursor ? { id: cursor } : undefined,
       skip: cursor ? 1 : 0,
     });
@@ -205,6 +227,19 @@ export const getFeedPosts = async (req: AuthRequest, res: Response, next: NextFu
       select: { postId: true },
     });
     const savedPostIds = new Set(savedPosts.map((s) => s.postId));
+
+    const postIds = posts.map((p) => p.id);
+    const reactionTypeRows = postIds.length
+      ? await prisma.reaction.groupBy({
+          by: ['postId', 'type'],
+          where: { postId: { in: postIds } },
+        })
+      : [];
+    const reactionTypesByPost = reactionTypeRows.reduce<Record<string, string[]>>((acc, row) => {
+      if (!acc[row.postId]) acc[row.postId] = [];
+      if (!acc[row.postId].includes(row.type)) acc[row.postId].push(row.type);
+      return acc;
+    }, {});
 
     const canViewPost = (post: {
       authorId: string;
@@ -235,6 +270,8 @@ export const getFeedPosts = async (req: AuthRequest, res: Response, next: NextFu
         hasReacted: !!userReaction,
         reactionType: userReaction ? userReaction.type : null,
         isSaved: savedPostIds.has(post.id),
+        reactionTypes: reactionTypesByPost[post.id] || [],
+        reactions: userReaction ? [userReaction] : [],
       };
     });
 
@@ -648,6 +685,8 @@ export const reactPost = async (req: AuthRequest, res: Response, next: NextFunct
       });
     }
 
+    broadcastFeedUpdate({ type: 'post:reacted', postId, userId });
+
     res.status(200).json({
       status: 'success',
       message: 'Reaction added',
@@ -704,22 +743,28 @@ export const createComment = async (req: AuthRequest, res: Response, next: NextF
 export const getPostComments = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { postId } = req.params;
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
+    const preview = req.query.preview === '1';
 
-    // Get parent comments (parentId = null) and include replies
     const comments = await prisma.comment.findMany({
       where: { postId, parentId: null },
       include: {
         author: { include: { profile: true } },
-        replies: {
-          include: {
-            author: { include: { profile: true } },
-            reactions: true,
-          },
-          orderBy: { createdAt: 'asc' },
-        },
+        ...(preview
+          ? {}
+          : {
+              replies: {
+                include: {
+                  author: { include: { profile: true } },
+                  reactions: true,
+                },
+                orderBy: { createdAt: 'asc' as const },
+              },
+            }),
         reactions: true,
       },
       orderBy: { createdAt: 'desc' },
+      take: limit,
     });
 
     // Format to indicate user reactions
@@ -730,14 +775,16 @@ export const getPostComments = async (req: AuthRequest, res: Response, next: Nex
         ...c,
         hasReacted: !!userReaction,
         reactionType: userReaction ? userReaction.type : null,
-        replies: c.replies.map((reply) => {
-          const repReaction = reply.reactions.find((r) => r.userId === currentUserId);
-          return {
-            ...reply,
-            hasReacted: !!repReaction,
-            reactionType: repReaction ? repReaction.type : null,
-          };
-        }),
+        replies: (c as any).replies
+          ? (c as any).replies.map((reply: any) => {
+              const repReaction = reply.reactions?.find((r: { userId: string }) => r.userId === currentUserId);
+              return {
+                ...reply,
+                hasReacted: !!repReaction,
+                reactionType: repReaction ? repReaction.type : null,
+              };
+            })
+          : [],
       };
     });
 
@@ -904,7 +951,6 @@ function buildFeedWhere(
             authorId: { in: followingIds.filter((id) => friendIds.includes(id)) },
             privacy: { in: [Privacy.PUBLIC, Privacy.FRIENDS] },
           },
-          { privacy: Privacy.PUBLIC },
         ],
       },
       ...(joinedGroupIds.length > 0 ? [{ groupId: { in: joinedGroupIds } }] : []),

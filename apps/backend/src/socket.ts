@@ -163,6 +163,13 @@ export const sendRealtimeNotification = (receiverId: string, notification: any) 
   }
 };
 
+/** Broadcast feed updates to all connected clients (new posts, reactions). */
+export const broadcastFeedUpdate = (payload: { type: string; postId?: string; userId?: string }) => {
+  if (io) {
+    io.emit('feed:update', payload);
+  }
+};
+
 // Helper: Check if user is online
 export const isUserOnline = (userId: string): boolean => {
   return onlineUsers.has(userId);

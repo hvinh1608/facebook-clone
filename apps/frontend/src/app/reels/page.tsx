@@ -275,7 +275,7 @@ export default function ReelsPage() {
         <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${btnClass}`}>
           <Share2 className={`w-5 h-5 ${onVideo ? 'text-white' : 'text-slate-700 dark:text-white'}`} />
         </div>
-        <span className="text-xs font-semibold">{formatCount(0)}</span>
+        <span className="text-xs font-semibold">{formatCount(post._count?.shares ?? 0)}</span>
       </button>
 
       <button

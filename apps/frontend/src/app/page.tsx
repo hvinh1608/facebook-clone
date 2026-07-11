@@ -7,12 +7,23 @@ import PostCreator from '../components/PostCreator';
 import ScheduledPostsBar from '../components/ScheduledPostsBar';
 import PostCard from '../components/PostCard';
 import { useFeedStore, type FeedSort } from '../store/feedStore';
-import { Loader2 } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import { Loader2, RefreshCw } from 'lucide-react';
 
 export default function HomeFeedPage() {
-  const { posts, nextCursor, isLoading, hasInitialized, sort, fetchFeed, setSort } = useFeedStore();
+  const { posts, nextCursor, isLoading, hasInitialized, sort, fetchFeed, setSort, hasNewPosts, refreshFeed } = useFeedStore();
+  const { socket } = useSocket();
   const observerTarget = useRef<HTMLDivElement>(null);
   const hasRequestedInitialFeed = useRef(false);
+
+  useEffect(() => {
+    if (!socket) return;
+    const onFeedUpdate = () => {
+      useFeedStore.getState().markNewPostsAvailable();
+    };
+    socket.on('feed:update', onFeedUpdate);
+    return () => { socket.off('feed:update', onFeedUpdate); };
+  }, [socket]);
 
   useEffect(() => {
     if (hasRequestedInitialFeed.current || hasInitialized) return;
@@ -53,12 +64,23 @@ export default function HomeFeedPage() {
   return (
     <Layout>
       <div className="flex flex-col gap-4 md:gap-5 max-w-[680px] mx-auto">
-        {/* Story Carousel Section */}
-        <div className="fb-card p-3 md:p-4 overflow-hidden">
+        {/* Story Carousel — full width on mobile like Facebook */}
+        <div className="md:fb-card md:p-3 lg:p-4 md:overflow-hidden -mx-2 px-2 md:mx-0 md:px-0">
           <Suspense fallback={<div className="h-24 animate-pulse bg-[var(--hover-bg)] rounded-lg" />}>
             <StoryCarousel />
           </Suspense>
         </div>
+
+        {hasNewPosts && (
+          <button
+            type="button"
+            onClick={() => refreshFeed()}
+            className="sticky top-16 z-30 mx-auto flex items-center gap-2 px-4 py-2 bg-[#1877f2] text-white text-sm font-semibold rounded-full shadow-lg hover:bg-[#166fe5] transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Có bài viết mới
+          </button>
+        )}
 
         {/* Post Creator Section */}
         <PostCreator />

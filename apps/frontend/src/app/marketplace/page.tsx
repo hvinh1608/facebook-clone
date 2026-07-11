@@ -12,11 +12,19 @@ export default function MarketplacePage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', price: '', location: '', imageUrl: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
 
   const fetchListings = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/discovery/marketplace');
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.set('q', searchQuery.trim());
+      if (minPrice) params.set('minPrice', minPrice);
+      if (maxPrice) params.set('maxPrice', maxPrice);
+      if (locationFilter.trim()) params.set('location', locationFilter.trim());
+      const res = await api.get(`/discovery/marketplace?${params.toString()}`);
       if (res.data?.status === 'success') {
         setListings(res.data.data);
       }
@@ -28,8 +36,11 @@ export default function MarketplacePage() {
   };
 
   useEffect(() => {
-    fetchListings();
-  }, []);
+    const timer = setTimeout(() => {
+      void fetchListings();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery, minPrice, maxPrice, locationFilter]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,13 +100,28 @@ export default function MarketplacePage() {
           <div className="flex-1 p-4 flex flex-col gap-3">
             <h3 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Bộ lọc</h3>
             <div className="flex flex-col gap-2.5">
-              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-350">
-                <MapPin className="w-4 h-4 text-slate-400" />
-                <span>Toàn quốc · Bán kính 100km</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-350">
-                <Tag className="w-4 h-4 text-slate-400" />
-                <span>Đang hiển thị tất cả các danh mục</span>
+              <input
+                type="text"
+                placeholder="Vị trí (VD: Hà Nội)"
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-lg bg-[#f0f2f5] dark:bg-[#3a3b3c] border-0 focus:outline-none dark:text-white"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Giá từ"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-1/2 px-3 py-2 text-xs rounded-lg bg-[#f0f2f5] dark:bg-[#3a3b3c] border-0 focus:outline-none dark:text-white"
+                />
+                <input
+                  type="number"
+                  placeholder="Giá đến"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-1/2 px-3 py-2 text-xs rounded-lg bg-[#f0f2f5] dark:bg-[#3a3b3c] border-0 focus:outline-none dark:text-white"
+                />
               </div>
             </div>
           </div>

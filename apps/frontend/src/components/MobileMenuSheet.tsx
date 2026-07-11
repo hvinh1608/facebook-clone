@@ -12,6 +12,7 @@ import {
   Settings,
   Bookmark,
   Bell,
+  MessageSquare,
   ShieldAlert,
   LogOut,
   User,
@@ -32,7 +33,7 @@ const menuLinks = [
   { href: '/pages', icon: Flag, label: 'Trang' },
   { href: '/memories', icon: Clock, label: 'Kỷ niệm' },
   { href: '/saved', icon: Bookmark, label: 'Đã lưu' },
-  { href: '/chat', icon: Bell, label: 'Messenger' },
+  { href: '/chat', icon: MessageSquare, label: 'Messenger' },
   { href: '/settings', icon: Settings, label: 'Cài đặt' },
 ];
 

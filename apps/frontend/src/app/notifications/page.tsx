@@ -18,6 +18,62 @@ const typeLabels: Record<string, string> = {
   NEW_MESSAGE: 'đã gửi tin nhắn mới.',
 };
 
+function groupNotifications(notifications: any[]) {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const today: any[] = [];
+  const earlier: any[] = [];
+  for (const n of notifications) {
+    if (new Date(n.createdAt) >= todayStart) today.push(n);
+    else earlier.push(n);
+  }
+  return { today, earlier };
+}
+
+function NotificationRow({
+  notif,
+  onClick,
+  onDelete,
+}: {
+  notif: any;
+  onClick: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div
+      className={`flex items-start gap-3 p-4 border-b border-slate-100 dark:border-[#3e4042] last:border-b-0 ${
+        !notif.isRead ? 'bg-[#e7f3ff] dark:bg-brand-950/20' : ''
+      }`}
+    >
+      <button type="button" onClick={onClick} className="flex items-start gap-3 flex-1 text-left min-w-0">
+        <OptimizedAvatar
+          src={notif.sender?.avatarUrl}
+          alt={notif.sender?.displayName || 'Hệ thống'}
+          size={44}
+          className="w-11 h-11 rounded-full object-cover flex-shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-slate-800 dark:text-[#e4e6eb] leading-snug">
+            <span className="font-semibold">{notif.sender?.displayName || 'Hệ thống'}</span>{' '}
+            {typeLabels[notif.type] || 'đã tương tác với bạn.'}
+          </p>
+          <span className="text-xs text-slate-500 mt-1 block">
+            {new Date(notif.createdAt).toLocaleString('vi-VN')}
+          </span>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full"
+        title="Xóa"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { openBox } = useChatBoxesStore();
@@ -42,6 +98,8 @@ export default function NotificationsPage() {
       else router.push('/chat');
     }
   };
+
+  const { today, earlier } = groupNotifications(notifications);
 
   return (
     <Layout>
@@ -74,40 +132,34 @@ export default function NotificationsPage() {
           ) : notifications.length === 0 ? (
             <p className="text-center text-sm text-slate-500 py-12">Chưa có thông báo nào.</p>
           ) : (
-            notifications.map((notif) => (
-              <div
-                key={notif.id}
-                className={`flex items-start gap-3 p-4 border-b border-slate-100 dark:border-[#3e4042] last:border-b-0 ${
-                  !notif.isRead ? 'bg-[#e7f3ff] dark:bg-brand-950/20' : ''
-                }`}
-              >
-                <button type="button" onClick={() => handleClick(notif)} className="flex items-start gap-3 flex-1 text-left min-w-0">
-                  <OptimizedAvatar
-                    src={notif.sender?.avatarUrl}
-                    alt={notif.sender?.displayName || 'Hệ thống'}
-                    size={44}
-                    className="w-11 h-11 rounded-full object-cover flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-800 dark:text-[#e4e6eb] leading-snug">
-                      <span className="font-semibold">{notif.sender?.displayName || 'Hệ thống'}</span>{' '}
-                      {typeLabels[notif.type] || 'đã tương tác với bạn.'}
-                    </p>
-                    <span className="text-xs text-slate-500 mt-1 block">
-                      {new Date(notif.createdAt).toLocaleString('vi-VN')}
-                    </span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => deleteNotification(notif.id)}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-full"
-                  title="Xóa"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))
+            <>
+              {today.length > 0 && (
+                <>
+                  <p className="px-4 py-2 text-xs font-bold text-slate-500 uppercase bg-slate-50 dark:bg-[#18191a]">Mới</p>
+                  {today.map((notif) => (
+                    <NotificationRow
+                      key={notif.id}
+                      notif={notif}
+                      onClick={() => handleClick(notif)}
+                      onDelete={() => deleteNotification(notif.id)}
+                    />
+                  ))}
+                </>
+              )}
+              {earlier.length > 0 && (
+                <>
+                  <p className="px-4 py-2 text-xs font-bold text-slate-500 uppercase bg-slate-50 dark:bg-[#18191a]">Trước đó</p>
+                  {earlier.map((notif) => (
+                    <NotificationRow
+                      key={notif.id}
+                      notif={notif}
+                      onClick={() => handleClick(notif)}
+                      onDelete={() => deleteNotification(notif.id)}
+                    />
+                  ))}
+                </>
+              )}
+            </>
           )}
         </div>
 

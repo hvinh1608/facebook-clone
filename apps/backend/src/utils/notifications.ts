@@ -16,6 +16,26 @@ interface CreateNotificationParams {
   entityId?: string | null;
 }
 
+async function shouldNotify(receiverId: string, type: NotificationType): Promise<boolean> {
+  const settings = await prisma.userSettings.findUnique({ where: { userId: receiverId } });
+  if (!settings) return true;
+  switch (type) {
+    case 'LIKE':
+      return settings.notifyLike;
+    case 'COMMENT':
+      return settings.notifyComment;
+    case 'SHARE':
+      return settings.notifyShare;
+    case 'FRIEND_REQUEST':
+    case 'FRIEND_ACCEPT':
+      return settings.notifyFriendRequest;
+    case 'NEW_MESSAGE':
+      return settings.notifyMessage;
+    default:
+      return true;
+  }
+}
+
 export async function createAndPushNotification({
   receiverId,
   senderId,
@@ -23,6 +43,8 @@ export async function createAndPushNotification({
   entityId,
 }: CreateNotificationParams) {
   if (senderId && senderId === receiverId) return null;
+
+  if (!(await shouldNotify(receiverId, type))) return null;
 
   const notification = await prisma.notification.create({
     data: {

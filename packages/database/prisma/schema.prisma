@@ -127,6 +127,8 @@ model Block {
   createdAt   DateTime @default(now())
 
   @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }
 
 model Profile {
@@ -173,6 +175,8 @@ model Post {
   savedBy     SavedPost[]
 
   @@index([createdAt, scheduledAt])
+  @@index([authorId, createdAt])
+  @@index([groupId, createdAt])
 }
 
 model PostMedia {
@@ -194,6 +198,7 @@ model Reaction {
   createdAt DateTime     @default(now())
 
   @@unique([postId, userId])
+  @@index([postId])
 }
 
 model Comment {
@@ -210,6 +215,8 @@ model Comment {
   updatedAt DateTime          @updatedAt
 
   reactions CommentReaction[]
+
+  @@index([postId, parentId])
 }
 
 model CommentReaction {
@@ -246,6 +253,8 @@ model Friendship {
   createdAt DateTime @default(now())
 
   @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
 }
 
 model Follow {
@@ -257,6 +266,8 @@ model Follow {
   createdAt   DateTime @default(now())
 
   @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }
 
 model Message {

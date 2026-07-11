@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Image, Globe, Users, Lock, Smile, MapPin, X, UserPlus } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -16,6 +17,7 @@ export default function PostCreator({
   groupId?: string | null;
   onPostCreated?: (post: any) => void;
 }) {
+  const router = useRouter();
   const { user } = useAuthStore();
   const { addPost } = useFeedStore();
 
@@ -201,7 +203,7 @@ export default function PostCreator({
           {/* Live Video placeholder */}
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => router.push('/live')}
             className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c] rounded-lg transition-colors text-xs font-bold"
           >
             <span className="text-red-500 text-lg leading-none">📹</span>

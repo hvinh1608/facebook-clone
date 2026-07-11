@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, Bell, MessageSquare, ShieldAlert, LogOut, User, Lock, Home, Users, Compass, Bookmark, UserX, Play, Moon, Sun, Radio } from 'lucide-react';
+import { Search, Bell, MessageSquare, ShieldAlert, LogOut, User, Lock, Home, Compass, Bookmark, UserX, Play, Moon, Sun, Store, Clapperboard } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNotificationStore } from '../store/notificationStore';
 import { useChatStore } from '../store/chatStore';
@@ -27,7 +27,10 @@ export default function Header() {
   const [showNotifyDropdown, setShowNotifyDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMessengerDropdown, setShowMessengerDropdown] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ users: any[]; groups: any[]; posts: any[] }>({ users: [], groups: [], posts: [] });
+  const [isSearching, setIsSearching] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifyRef = useRef<HTMLDivElement>(null);
@@ -63,6 +66,50 @@ export default function Header() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
+
+  const runTypeaheadSearch = (query: string) => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (!query.trim()) {
+      setSearchResults({ users: [], groups: [], posts: [] });
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const q = encodeURIComponent(query.trim());
+        const [usersRes, groupsRes, postsRes] = await Promise.all([
+          api.get(`/users/search?q=${q}&limit=5`),
+          api.get(`/groups/search?q=${q}&limit=3`).catch(() => ({ data: { data: [] } })),
+          api.get(`/posts/search?q=${q}&limit=3`).catch(() => ({ data: { data: [] } })),
+        ]);
+        setSearchResults({
+          users: usersRes.data?.data || [],
+          groups: groupsRes.data?.data || [],
+          posts: postsRes.data?.data || [],
+        });
+      } catch {
+        setSearchResults({ users: [], groups: [], posts: [] });
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setShowRecentSearches(!value.trim());
+    runTypeaheadSearch(value);
+  };
+
+  const hasTypeaheadResults =
+    searchResults.users.length > 0 || searchResults.groups.length > 0 || searchResults.posts.length > 0;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,26 +179,89 @@ export default function Header() {
             type="text"
             placeholder="Tìm kiếm trên Facebook"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => { setShowRecentSearches(true); setIsSearchFocused(true); }}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onFocus={() => { setShowRecentSearches(!searchQuery.trim()); setIsSearchFocused(true); }}
             className={`glass-input pr-4 py-2 w-48 md:w-60 rounded-full text-sm dark:text-white placeholder-slate-500 focus:bg-white dark:focus:bg-[#242526] transition-all duration-200 ${
               isSearchFocused ? 'pl-4 w-52 md:w-72 shadow-[0_4px_12px_rgba(0,0,0,0.1)]' : 'pl-9'
             }`}
           />
           {!isSearchFocused && <Search className="absolute left-3 w-4 h-4 text-slate-500 pointer-events-none" />}
-          {showRecentSearches && recentSearches.length > 0 && (
-            <div className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-[#242526] border border-slate-200 dark:border-[#3e4042] rounded-xl shadow-xl z-50 py-2">
-              <p className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase">Tìm kiếm gần đây</p>
-              {recentSearches.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => { router.push(`/search?q=${encodeURIComponent(q)}`); setShowRecentSearches(false); setIsSearchFocused(false); }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-[#3a3b3c]"
-                >
-                  {q}
-                </button>
-              ))}
+          {(showRecentSearches || isSearchFocused) && (searchQuery.trim() ? hasTypeaheadResults || isSearching : recentSearches.length > 0) && (
+            <div className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-[#242526] border border-slate-200 dark:border-[#3e4042] rounded-xl shadow-xl z-50 py-2 max-h-80 overflow-y-auto">
+              {searchQuery.trim() ? (
+                <>
+                  {isSearching && (
+                    <p className="px-3 py-2 text-xs text-slate-500">Đang tìm...</p>
+                  )}
+                  {searchResults.users.length > 0 && (
+                    <>
+                      <p className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase">Mọi người</p>
+                      {searchResults.users.map((u) => (
+                        <Link
+                          key={u.id}
+                          href={`/profile/${u.id}`}
+                          onClick={() => { setShowRecentSearches(false); setIsSearchFocused(false); }}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#3a3b3c]"
+                        >
+                          <OptimizedAvatar src={u.profile?.avatarUrl} alt={u.profile?.displayName} size={32} className="w-8 h-8 rounded-full" />
+                          <span className="text-sm font-semibold truncate">{u.profile?.displayName}</span>
+                        </Link>
+                      ))}
+                    </>
+                  )}
+                  {searchResults.groups.length > 0 && (
+                    <>
+                      <p className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase">Nhóm</p>
+                      {searchResults.groups.map((g: any) => (
+                        <Link
+                          key={g.id}
+                          href={`/groups/${g.id}`}
+                          onClick={() => { setShowRecentSearches(false); setIsSearchFocused(false); }}
+                          className="block px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-[#3a3b3c] truncate"
+                        >
+                          {g.name}
+                        </Link>
+                      ))}
+                    </>
+                  )}
+                  {searchResults.posts.length > 0 && (
+                    <>
+                      <p className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase">Bài viết</p>
+                      {searchResults.posts.map((p: any) => (
+                        <Link
+                          key={p.id}
+                          href={`/posts/${p.id}`}
+                          onClick={() => { setShowRecentSearches(false); setIsSearchFocused(false); }}
+                          className="block px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-[#3a3b3c] line-clamp-1"
+                        >
+                          {p.content || 'Bài viết'}
+                        </Link>
+                      ))}
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { router.push(`/search?q=${encodeURIComponent(searchQuery)}`); setShowRecentSearches(false); setIsSearchFocused(false); }}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold text-[#1877f2] hover:bg-slate-100 dark:hover:bg-[#3a3b3c] border-t border-slate-100 dark:border-[#3e4042] mt-1"
+                  >
+                    Xem tất cả kết quả cho &quot;{searchQuery}&quot;
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase">Tìm kiếm gần đây</p>
+                  {recentSearches.map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => { router.push(`/search?q=${encodeURIComponent(q)}`); setShowRecentSearches(false); setIsSearchFocused(false); }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-[#3a3b3c]"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </form>
@@ -161,13 +271,13 @@ export default function Header() {
       <div className="hidden md:flex items-center justify-center flex-1 max-w-[540px] h-full px-4">
         {[
           { href: '/', icon: Home, label: 'Trang chủ' },
-          { href: '/friends', icon: Users, label: 'Bạn bè' },
           { href: '/watch', icon: Play, label: 'Video' },
-          { href: '/live', icon: Radio, label: 'Trực tiếp' },
+          { href: '/marketplace', icon: Store, label: 'Marketplace' },
           { href: '/groups', icon: Compass, label: 'Nhóm' },
+          { href: '/reels', icon: Clapperboard, label: 'Reels' },
         ].map((tab) => {
           const Icon = tab.icon;
-          const isActive = pathname === tab.href || (tab.href === '/watch' && pathname.startsWith('/watch')) || (tab.href === '/live' && pathname.startsWith('/live'));
+          const isActive = pathname === tab.href || (tab.href !== '/' && pathname.startsWith(tab.href));
           return (
             <Link
               key={tab.href}

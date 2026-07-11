@@ -91,6 +91,8 @@ function PostCardComponent({ post }: PostCardProps) {
   const [reportReason, setReportReason] = useState('');
   const [isReporting, setIsReporting] = useState(false);
   const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const [previewComments, setPreviewComments] = useState<any[]>([]);
+  const [hasLoadedPreview, setHasLoadedPreview] = useState(false);
   const [commentSort, setCommentSort] = useState<'newest' | 'oldest'>('newest');
 
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -114,6 +116,18 @@ function PostCardComponent({ post }: PostCardProps) {
   useEffect(() => {
     setIsSaved(!!post.isSaved);
   }, [post.isSaved, post.id]);
+
+  useEffect(() => {
+    if ((post._count?.comments ?? 0) === 0 || showComments || hasLoadedPreview) return;
+    api.get(`/posts/${post.id}/comments?limit=2&preview=1`)
+      .then((res) => {
+        if (res.data?.status === 'success') {
+          setPreviewComments(res.data.data.slice(0, 2));
+          setHasLoadedPreview(true);
+        }
+      })
+      .catch(() => {});
+  }, [post.id, post._count?.comments, showComments, hasLoadedPreview]);
 
   useEffect(() => {
     return () => {
@@ -348,7 +362,9 @@ function PostCardComponent({ post }: PostCardProps) {
   }, [post.content, isLongContent, isContentExpanded]);
 
   const reactionSummaryIcons = useMemo(() => {
-    const types = Array.from(new Set(post.reactions?.map((r: any) => r.type) || [])) as string[];
+    const types = (post as any).reactionTypes?.length
+      ? (post as any).reactionTypes
+      : Array.from(new Set(post.reactions?.map((r: any) => r.type) || [])) as string[];
     return types.slice(0, 3).map((type: string) => {
       let bgClass = 'bg-[#1877f2]'; // Like
       if (type === 'LOVE') bgClass = 'bg-red-500';
@@ -569,7 +585,7 @@ function PostCardComponent({ post }: PostCardProps) {
           {(post.reactions?.length ?? 0) > 0 && (
             <>
               <span className="flex items-center -space-x-1">{reactionSummaryIcons}</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{post.reactions?.length ?? 0}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{post._count?.reactions ?? post.reactions?.length ?? 0}</span>
             </>
           )}
         </button>
@@ -641,6 +657,35 @@ function PostCardComponent({ post }: PostCardProps) {
           </div>
         )}
       </div>
+
+      {/* Top comment previews — like Facebook */}
+      {!showComments && previewComments.length > 0 && (
+        <div className="flex flex-col gap-2 pt-1">
+          {previewComments.map((c) => (
+            <div key={c.id} className="flex gap-2 items-start">
+              <OptimizedAvatar
+                src={c.author?.profile?.avatarUrl}
+                alt={c.author?.profile?.displayName}
+                size={32}
+                className="w-8 h-8 rounded-full flex-shrink-0"
+              />
+              <div className="bg-slate-100 dark:bg-[#3a3b3c] rounded-2xl px-3 py-1.5 min-w-0">
+                <p className="text-xs font-semibold text-black dark:text-white">{c.author?.profile?.displayName}</p>
+                <p className="text-sm text-slate-800 dark:text-[#e4e6eb] break-words">{c.content}</p>
+              </div>
+            </div>
+          ))}
+          {(post._count?.comments ?? 0) > previewComments.length && (
+            <button
+              type="button"
+              onClick={handleToggleComments}
+              className="text-xs font-semibold text-slate-500 hover:underline text-left pl-10"
+            >
+              Xem thêm bình luận
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Comments Container */}
       {showComments && (

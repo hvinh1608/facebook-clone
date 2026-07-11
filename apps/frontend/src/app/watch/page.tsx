@@ -13,7 +13,17 @@ export default function WatchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  const filteredPosts = posts.filter((post) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (post.content || '').toLowerCase().includes(q) ||
+      (post.author?.profile?.displayName || '').toLowerCase().includes(q)
+    );
+  });
 
   const fetchWatch = useCallback(async (reset = false) => {
     if (isLoading) return;
@@ -79,6 +89,8 @@ export default function WatchPage() {
               <input
                 type="text"
                 placeholder="Tìm kiếm video..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 bg-[#f0f2f5] dark:bg-[#3a3b3c] border-0 rounded-full text-xs focus:outline-none dark:text-white placeholder-slate-500"
               />
             </div>
@@ -88,8 +100,10 @@ export default function WatchPage() {
             <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400 px-2 uppercase tracking-wide my-1">Video gợi ý</h2>
             {posts.length === 0 ? (
               <p className="text-center text-xs text-slate-500 py-10">Không tìm thấy video nào.</p>
+            ) : filteredPosts.length === 0 ? (
+              <p className="text-center text-xs text-slate-500 py-10">Không có video khớp tìm kiếm.</p>
             ) : (
-              posts.map((post) => {
+              filteredPosts.map((post) => {
                 const thumb = post.media?.find((m: any) => m.type === 'VIDEO');
                 if (!thumb) return null;
                 const isSelected = activeId === post.id;

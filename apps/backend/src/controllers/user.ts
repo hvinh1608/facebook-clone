@@ -468,15 +468,34 @@ export const getFriendSuggestions = async (req: AuthRequest, res: Response, next
 
     const excludedIds = [currentUserId, ...friendIds, ...requestIds, ...blockedIds];
 
-    // Find users not in excluded list
-    const users = await prisma.user.findMany({
-      where: {
-        id: { notIn: excludedIds },
-        status: 'ACTIVE',
-      },
-      include: { profile: true },
-      take: 10,
-    });
+    // Find friends-of-friends first, then random users
+    const fofCandidates = friendIds.length
+      ? await prisma.friendship.findMany({
+          where: {
+            OR: [{ user1Id: { in: friendIds } }, { user2Id: { in: friendIds } }],
+          },
+          take: 40,
+        })
+      : [];
+    const fofIds = fofCandidates
+      .map((f) => (friendIds.includes(f.user1Id) ? f.user2Id : f.user1Id))
+      .filter((id) => !excludedIds.includes(id));
+
+    const prioritizedIds = [...new Set(fofIds)].slice(0, 10);
+
+    const users = prioritizedIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: prioritizedIds }, status: 'ACTIVE' },
+          include: { profile: true },
+        })
+      : await prisma.user.findMany({
+          where: {
+            id: { notIn: excludedIds },
+            status: 'ACTIVE',
+          },
+          include: { profile: true },
+          take: 10,
+        });
 
     const suggestions = users.map((u) => ({
       id: u.id,

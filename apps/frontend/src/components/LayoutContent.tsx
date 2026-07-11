@@ -11,6 +11,7 @@ import MobileMenuSheet from './MobileMenuSheet';
 import ChatBoxesContainer from './ChatBoxesContainer';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
+import { shouldShowSidebars, isFullBleedPage, isReelsPage } from '../lib/layoutRoutes';
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -18,13 +19,10 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const { isAuthenticated, user, updateUser, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const showSidebars = pathname === '/';
+  const showSidebars = shouldShowSidebars(pathname);
   const hideSidebars = !showSidebars;
-  const isReelsPage = pathname?.startsWith('/reels');
-  const isFullBleedPage =
-    pathname?.startsWith('/watch') ||
-    pathname?.startsWith('/profile/') ||
-    isReelsPage;
+  const reelsPage = isReelsPage(pathname);
+  const fullBleedPage = isFullBleedPage(pathname);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -108,9 +106,9 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
 
         <main
           className={`flex-1 min-w-0 overflow-y-auto ${
-            isReelsPage
+            reelsPage
               ? 'px-0 py-0 pb-0 h-[calc(100dvh-3.5rem-3.5rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3.5rem)] overflow-hidden'
-              : isFullBleedPage
+              : fullBleedPage
                 ? 'px-0 py-0 pb-0'
                 : hideSidebars
                   ? 'px-2 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6'
@@ -130,9 +128,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
         onLogout={handleLogout}
       />
 
-      <div className="hidden md:block">
-        <ChatBoxesContainer />
-      </div>
+      <ChatBoxesContainer />
     </div>
   );
 }
