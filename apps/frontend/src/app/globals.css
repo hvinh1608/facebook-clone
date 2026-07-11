@@ -530,3 +530,12 @@ body {
   animation: slide-up 0.25s ease-out;
 }
 
+@media (max-width: 639px) {
+  .fb-card {
+    border-radius: 0px !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
+  }
+}
+

@@ -310,6 +310,10 @@ export default function Header() {
         )}
 
         {/* Messenger — popup on desktop, /chat on mobile */}
+        <Link href="/search" className="fb-icon-button sm:hidden" title="Tìm kiếm">
+          <Search className="w-5 h-5" />
+        </Link>
+
         <div className="relative" ref={messengerRef}>
           <button
             type="button"
@@ -381,7 +385,7 @@ export default function Header() {
           )}
         </div>
 
-        <div className="relative" ref={notifyRef}>
+        <div className="relative hidden sm:block" ref={notifyRef}>
           <button
             onClick={() => setShowNotifyDropdown(!showNotifyDropdown)}
             className="fb-icon-button relative"
@@ -453,7 +457,7 @@ export default function Header() {
           )}
         </div>
 
-        <div className="relative" ref={profileRef}>
+        <div className="relative hidden sm:block" ref={profileRef}>
           <button onClick={() => setShowProfileDropdown(!showProfileDropdown)} className="flex items-center focus:outline-none">
             <OptimizedAvatar
               src={user?.avatarUrl}

@@ -111,8 +111,8 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
               : fullBleedPage
                 ? 'px-0 py-0 pb-0'
                 : hideSidebars
-                  ? 'px-2 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6'
-                  : 'px-2 py-3 sm:px-0 sm:py-4 md:py-6'
+                  ? 'px-0 py-2 sm:px-4 sm:py-4 md:px-6 md:py-6'
+                  : 'px-0 py-2 sm:px-0 sm:py-4 md:py-6'
           }`}
         >
           {children}

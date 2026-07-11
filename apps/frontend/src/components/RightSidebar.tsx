@@ -26,6 +26,7 @@ export default function RightSidebar() {
   const [friends, setFriends] = useState<any[]>([]);
   const [contactSearch, setContactSearch] = useState('');
   const [showContactSearch, setShowContactSearch] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchSuggestions = useCallback(async () => {
     try {
