@@ -409,14 +409,25 @@ body {
   border-radius: 9999px;
   padding: 4px 8px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   position: absolute;
   bottom: calc(100% + 4px);
-  left: 50%;
+  left: 16.666%;
   transform: translateX(-50%);
   z-index: 50;
   pointer-events: auto;
   animation: fb-popover-in 0.2s cubic-bezier(0.12, 0.8, 0.32, 1) forwards;
+  max-width: calc(100vw - 1rem);
+}
+
+@media (max-width: 767px) {
+  .fb-reactions-popover {
+    left: 0;
+    transform: none;
+    animation-name: fb-popover-in-mobile;
+    gap: 2px;
+    padding: 4px 6px;
+  }
 }
 
 @keyframes fb-popover-in {
@@ -427,6 +438,17 @@ body {
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes fb-popover-in-mobile {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

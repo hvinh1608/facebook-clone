@@ -368,7 +368,7 @@ function PostCardComponent({ post }: PostCardProps) {
   }, [post.reactions]);
 
   return (
-    <div className="fb-card p-4 flex flex-col gap-3">
+    <div className="fb-card p-4 flex flex-col gap-3 overflow-visible">
       
       {/* Header Profile Section */}
       <div className="flex items-start justify-between relative">
@@ -579,9 +579,11 @@ function PostCardComponent({ post }: PostCardProps) {
       </div>
 
       {/* Actions Toolbar */}
-      <div className="flex justify-between items-center relative py-1 border-b border-slate-200 dark:border-[#3e4042]">
+      <div
+        ref={reactionsRef}
+        className="flex justify-between items-center relative py-1 border-b border-slate-200 dark:border-[#3e4042] overflow-visible"
+      >
         <div
-          ref={reactionsRef}
           className="relative flex-1"
           onMouseEnter={handleReactionsMouseEnter}
           onMouseLeave={handleReactionsMouseLeave}
@@ -601,26 +603,6 @@ function PostCardComponent({ post }: PostCardProps) {
                 : 'Thích'}
             </span>
           </button>
-
-          {showReactionsPanel && (
-            <div
-              className="fb-reactions-popover"
-              onMouseEnter={handleReactionsMouseEnter}
-              onMouseLeave={handleReactionsMouseLeave}
-            >
-              <div className="absolute left-0 right-0 top-full h-5" />
-              {REACTIONS_LIST.map((r) => (
-                <button
-                  key={r.type}
-                  onClick={() => handleReactionSelect(r.type)}
-                  className="fb-reaction-emoji hover:scale-135 transition-transform active:scale-95 text-2xl p-1"
-                  title={r.label}
-                >
-                  {r.label.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         <button
@@ -638,6 +620,26 @@ function PostCardComponent({ post }: PostCardProps) {
           <Share2 className="w-4.5 h-4.5 text-slate-500" />
           Chia sẻ
         </button>
+
+        {showReactionsPanel && (
+          <div
+            className="fb-reactions-popover"
+            onMouseEnter={handleReactionsMouseEnter}
+            onMouseLeave={handleReactionsMouseLeave}
+          >
+            <div className="absolute left-0 right-0 top-full h-5" />
+            {REACTIONS_LIST.map((r) => (
+              <button
+                key={r.type}
+                onClick={() => handleReactionSelect(r.type)}
+                className="fb-reaction-emoji hover:scale-135 transition-transform active:scale-95 text-2xl p-1"
+                title={r.label}
+              >
+                {r.label.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Comments Container */}
